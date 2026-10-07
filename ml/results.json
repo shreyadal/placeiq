@@ -17,5 +17,24 @@
     "batch_size": 64,
     "seed": 42,
     "test_auc_no_repeat": 0.7519
+  },
+  {
+    "dataset": "interview",
+    "model": "dkt",
+    "valid_auc": 0.7852,
+    "valid_acc": 0.717,
+    "best_epoch": 9,
+    "max_epochs": 40,
+    "train_minutes": 0.8,
+    "config": {
+      "dropout": 0.2,
+      "emb_size": 200
+    },
+    "lr": 0.001,
+    "batch_size": 64,
+    "seed": 42,
+    "test_auc": 0.8135,
+    "test_acc": 0.747,
+    "test_auc_no_repeat": 0.8135
   }
 ]

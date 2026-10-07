@@ -11,3 +11,4 @@ training students; test is the 20% of students pykt holds out. All runs on CPU.
 | dataset | model | test AUC | test AUC (no repeats) | test acc | valid AUC | best epoch / max | train time (min) | settings |
 |---|---|---|---|---|---|---|---|---|
 | assist2009 | DKT | 0.8230 | 0.7519 | 0.7652 | 0.8317 | 6 / 30 | 4.6 | dropout=0.2, emb_size=200, lr=0.001, batch=64 |
+| interview | DKT | 0.8135 | 0.8135 | 0.7470 | 0.7852 | 9 / 40 | 0.8 | dropout=0.2, emb_size=200, lr=0.001, batch=64 |
