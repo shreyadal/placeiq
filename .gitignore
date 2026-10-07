@@ -1,5 +1,16 @@
 venv/
 .env
-data/
 __pycache__/
 node_modules/
+.next/
+
+# data/ holds downloaded datasets and generated files; only the question bank is tracked
+data/*
+!data/questions.json
+
+# trained checkpoints, databases, vector store
+ml/saved_model/
+*.ckpt
+*.db
+rag/chroma/
+wandb/

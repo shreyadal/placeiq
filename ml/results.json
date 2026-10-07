@@ -1,0 +1,21 @@
+[
+  {
+    "dataset": "assist2009",
+    "model": "dkt",
+    "valid_auc": 0.8317,
+    "valid_acc": 0.779,
+    "test_auc": 0.823,
+    "test_acc": 0.7652,
+    "best_epoch": 6,
+    "max_epochs": 30,
+    "train_minutes": 4.6,
+    "config": {
+      "dropout": 0.2,
+      "emb_size": 200
+    },
+    "lr": 0.001,
+    "batch_size": 64,
+    "seed": 42,
+    "test_auc_no_repeat": 0.7519
+  }
+]
