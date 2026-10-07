@@ -12,3 +12,4 @@ training students; test is the 20% of students pykt holds out. All runs on CPU.
 |---|---|---|---|---|---|---|---|---|
 | assist2009 | DKT | 0.8230 | 0.7519 | 0.7652 | 0.8317 | 6 / 30 | 4.6 | dropout=0.2, emb_size=200, lr=0.001, batch=64 |
 | interview | DKT | 0.8135 | 0.8135 | 0.7470 | 0.7852 | 9 / 40 | 0.8 | dropout=0.2, emb_size=200, lr=0.001, batch=64 |
+| assist2009 | SAKT | 0.7200 | 0.7088 | 0.6985 | 0.7279 | 8 / 30 | 30.8 | dropout=0.2, emb_size=200, num_attn_heads=8, num_en=2, lr=0.001, batch=64 |

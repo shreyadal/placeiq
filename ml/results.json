@@ -36,5 +36,27 @@
     "test_auc": 0.8135,
     "test_acc": 0.747,
     "test_auc_no_repeat": 0.8135
+  },
+  {
+    "dataset": "assist2009",
+    "model": "sakt",
+    "valid_auc": 0.7279,
+    "valid_acc": 0.7101,
+    "best_epoch": 8,
+    "max_epochs": 30,
+    "train_minutes": 30.8,
+    "config": {
+      "dropout": 0.2,
+      "emb_size": 200,
+      "num_attn_heads": 8,
+      "num_en": 2,
+      "seq_len": 200
+    },
+    "lr": 0.001,
+    "batch_size": 64,
+    "seed": 42,
+    "test_auc": 0.72,
+    "test_acc": 0.6985,
+    "test_auc_no_repeat": 0.7088
   }
 ]
