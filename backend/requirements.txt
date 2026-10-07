@@ -1,0 +1,11 @@
+torch
+pykt-toolkit
+fastapi
+uvicorn
+python-multipart
+anthropic
+faster-whisper
+# faster-whisper 1.2 calls av.open(metadata_errors=...), which PyAV 19 removed
+av<19
+chromadb
+sentence-transformers
