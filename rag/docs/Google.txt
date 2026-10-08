@@ -1,0 +1,24 @@
+role: SWE Intern
+year: 2025
+concepts: DSA
+Two 45 minute interviews, both pure problem solving. The first was a graph problem phrased as a story about cities and roads, which reduced to finding the minimum cost to connect all nodes. The interviewer gave no hints until I explained my approach, then kept changing constraints: what if edges arrive as a stream?
+---
+role: SWE
+year: 2025
+concepts: DSA
+Dynamic programming question on the minimum number of operations to convert one string into another. I had to derive the recurrence aloud, then reduce the memory from a full table to two rows. They expect a proof-like argument for why the approach is correct, not just code that passes examples.
+---
+role: SWE Intern
+year: 2024
+concepts: DSA, ML
+My resume had a machine learning project, so half the round was on it: how I split the data, why I chose that metric, what overfitting looked like in my training curves and what I did about it. Then a coding problem on finding the median from a data stream using two heaps.
+---
+role: SWE
+year: 2024
+concepts: DSA, OS
+The interviewer asked me to implement a rate limiter. We discussed token bucket versus sliding window, then what breaks when multiple threads call it at once and how to fix it with a lock or atomic operations. Complexity and testing were discussed at every step.
+---
+role: SWE Intern
+year: 2025
+concepts: DSA
+A binary search question in disguise: find the smallest capacity that lets you ship packages in D days. I started with brute force and the interviewer asked what is monotonic here. Follow-up was to write test cases, including the largest inputs. They value how you handle hints and how clearly you communicate.

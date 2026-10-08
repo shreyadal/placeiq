@@ -1,0 +1,24 @@
+role: MTS Intern
+year: 2025
+concepts: DSA, OOP
+The first interview had many short C++ questions: the difference between a pointer and a reference, why a base class destructor should be virtual, shallow copy versus deep copy. Then a coding question on rotating a matrix in place by 90 degrees. They liked seeing the index math worked out on paper first.
+---
+role: MTS 1
+year: 2025
+concepts: OS, DSA
+Operating systems came up heavily: virtual memory, internal versus external fragmentation, and how a context switch works. A puzzle followed, then a linked list question to find the intersection point of two lists without extra space.
+---
+role: MTS Intern
+year: 2024
+concepts: DSA
+Aptitude and coding test first. In the interview I was asked to implement my own string to integer conversion handling overflow and invalid characters, then to find the longest palindromic substring. The interviewer asked me to write test cases before writing the code.
+---
+role: MTS 1
+year: 2024
+concepts: OOP
+Design round: design a simple drawing application with shapes. They asked how polymorphism helps here, how undo and redo could be implemented, and which SOLID principle each of my decisions followed. I was asked to justify an abstract class versus an interface for Shape.
+---
+role: MTS Intern
+year: 2025
+concepts: DSA, DBMS
+Director round was conversational. Project deep dive with questions on why I chose that database and how I would normalise one of my tables. One coding problem at the end: check if a binary tree is a valid binary search tree, and explain why checking only the immediate children is wrong.

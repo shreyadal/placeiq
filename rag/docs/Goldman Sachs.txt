@@ -1,0 +1,24 @@
+role: Summer Analyst
+year: 2025
+concepts: DSA
+The online test had aptitude, two coding questions and a short essay. Interviews were quick and rapid fire. Coding question: given stock prices, find the maximum profit with at most one transaction, then with unlimited transactions. He asked for the reasoning behind the greedy choice.
+---
+role: Analyst
+year: 2025
+concepts: DBMS, DSA
+A lot of SQL. Joins explained with examples, a query to find customers with no orders, WHERE versus HAVING, and what an index is and when it hurts. Then transactions: what commit and rollback do in a money transfer and why isolation matters.
+---
+role: Summer Analyst
+year: 2024
+concepts: OOP
+Core Java round: method overloading versus overriding, abstract class versus interface, what static means, and how a hash map works internally including collisions. I had to design a small class hierarchy for bank accounts and explain encapsulation with it.
+---
+role: Analyst
+year: 2024
+concepts: DSA, OS
+Probability puzzles first, then a coding question on finding the first non-repeating character in a stream. The interviewer then moved to multithreading: what a race condition is, how synchronised blocks help, and what a deadlock looks like in code.
+---
+role: Summer Analyst
+year: 2025
+concepts: DSA, ML
+My project used a regression model, so I was asked about the bias-variance trade-off, how I validated the model, and precision versus recall. Then a quick array question: find a pair with a given sum in a sorted array using two pointers.

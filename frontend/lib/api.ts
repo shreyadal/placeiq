@@ -40,7 +40,7 @@ export type Grade = {
   score: number;
   feedback: string;
   missing_points: string[];
-  grader: "claude" | "keyword" | "none";
+  grader: "ollama" | "keyword" | "none";
   reference_answer: string;
 };
 
@@ -102,7 +102,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     response = await fetch(`${API_URL}${path}`, init);
   } catch {
-    throw new Error(`Cannot reach the backend at ${API_URL}. Is uvicorn running?`);
+    // a crash inside the backend also lands here: its 500 reply has no CORS headers, so the browser hides it
+    throw new Error(`No usable reply from the backend at ${API_URL}. Check that uvicorn is running and look at its window for an error.`);
   }
   if (!response.ok) {
     const body = await response.json().catch(() => null);
@@ -119,7 +120,12 @@ function post<T>(path: string, body?: unknown): Promise<T> {
   });
 }
 
+export type Experience = { text: string; company: string; role: string; year: string; concepts: string };
+
 export const getCompanies = () => request<string[]>("/companies");
+
+export const getExperiences = (company: string, concepts: string[]) =>
+  request<Experience[]>(`/companies/${encodeURIComponent(company)}/experiences?concepts=${concepts.join(",")}`);
 
 export const startSession = (user_id: string, company: string | null, num_questions: number) =>
   post<{ session_id: number; num_questions: number }>("/sessions", { user_id, company, num_questions });

@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Geist, Geist_Mono } from "next/font/google";
+import SiteHeader from "@/components/SiteHeader";
 import "./globals.css";
+
+const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
 
 export const metadata: Metadata = {
   title: "PlaceIQ",
@@ -9,14 +13,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
       <body>
-        <nav className="nav">
-          <strong>PlaceIQ</strong>
-          <Link href="/">New interview</Link>
-          <Link href="/results">Results</Link>
-        </nav>
-        <main>{children}</main>
+        <div className="shell">
+          <SiteHeader />
+          {children}
+        </div>
       </body>
     </html>
   );

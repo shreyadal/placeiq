@@ -1,0 +1,24 @@
+role: SWE Intern
+year: 2025
+concepts: DSA
+Three coding questions in the online test, medium level: reverse nodes of a linked list in groups of k, a string problem on the longest substring without repeating characters, and a matrix spiral traversal. In the interview I had to write code on a shared editor and handle edge cases like an empty list and a single node without being prompted.
+---
+role: SWE
+year: 2025
+concepts: OOP, DSA
+The interviewer asked about virtual functions and how the vtable works, then the diamond problem and how C++ resolves it. After that, implement a trie with insert and prefix search. He asked what I would test if I had to write unit tests for it, which I did not expect.
+---
+role: SWE Intern
+year: 2024
+concepts: OS
+A full round on operating systems. Process versus thread, what is stored in a process control block, how paging works and what a page fault is. Then a scenario: a program is slow and the disk light is always on, what could be happening? The expected answer was thrashing and how to confirm it.
+---
+role: SWE
+year: 2024
+concepts: DSA, DBMS
+Design round: design a URL shortener. They asked how I would generate the short key, how to store the mapping, and whether I would pick SQL or NoSQL and why. Then a coding question on detecting a cycle in a directed graph with the reasoning for using three colours in DFS.
+---
+role: SWE Intern
+year: 2025
+concepts: DSA, OOP
+The last round was with a senior engineer. One problem only: serialize and deserialize a binary tree. He cared about how I structured the code into small functions and asked what I would change if the tree had a million nodes. Ended with why I want to work there and a project deep dive.

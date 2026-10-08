@@ -1,0 +1,24 @@
+role: Associate Software Engineer
+year: 2025
+concepts: DBMS
+As expected, databases took a full round. Normalisation up to third normal form with an example table, why B+ trees are used for indexes, and transaction isolation levels with the anomaly each one prevents. I had to write a query using a window function to rank employees by salary within a department.
+---
+role: Member Technical Staff
+year: 2025
+concepts: DSA, DBMS
+Two coding questions: find the missing number in an array and implement a queue using two stacks. Then how I would design tables for a library system, which columns to index, and what two-phase locking is.
+---
+role: Associate Software Engineer
+year: 2024
+concepts: OOP
+Java in depth: how garbage collection works at a high level, the difference between an abstract class and an interface, the singleton pattern and how to make it thread safe. They asked me to write the singleton and then tried to break it with two threads.
+---
+role: Member Technical Staff
+year: 2024
+concepts: OS, DSA
+Puzzles first, then operating systems: page replacement algorithms with a worked example of LRU on a reference string, and the banker's algorithm idea. A tree question after that: print the level order traversal in zigzag order.
+---
+role: Associate Software Engineer
+year: 2025
+concepts: DBMS, CN
+System oriented round. SQL versus NoSQL and when I would choose each, what sharding and replication are, and the CAP theorem with an example. Then what a load balancer does and how HTTPS keeps a connection secure.

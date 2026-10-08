@@ -1,0 +1,24 @@
+role: Software Developer
+year: 2025
+concepts: DSA
+Zoho-style rounds are long and programming heavy. Round two had five C programs to write on paper with no library functions: print a pattern, reverse words in a sentence in place, and merge two sorted arrays without extra space. Output correctness on tricky inputs mattered most.
+---
+role: Software Developer
+year: 2025
+concepts: OOP, DSA
+Advanced programming round of three hours: build a railway ticket booking console application with booking, cancellation and a waiting list. They evaluated how I modelled the classes, whether adding a new berth type needed big changes, and how I used queues for the waiting list.
+---
+role: Member Technical Staff
+year: 2024
+concepts: OS, DSA
+Technical interview after the coding rounds. They asked how memory is allocated for a program, stack versus heap memory, what a system call is, and what happens when fork is called. Then how I would implement my own dynamic array and what its amortised insertion cost is.
+---
+role: Software Developer
+year: 2024
+concepts: DBMS
+Questions on designing tables for the ticket booking app I wrote in the previous round: which keys, how to normalise, and which index would make finding a passenger by PNR fast. Then what a transaction is and why two people should not get the same seat.
+---
+role: Member Technical Staff
+year: 2025
+concepts: CN, DSA
+The interviewer asked how a chat application sends a message from one phone to another, which led to TCP versus UDP, what a socket is and how WebSockets differ from polling. Then a string problem: check if two strings are anagrams without sorting.

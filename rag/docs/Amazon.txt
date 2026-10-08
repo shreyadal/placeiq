@@ -1,0 +1,24 @@
+role: SDE Intern
+year: 2025
+concepts: DSA
+Online assessment had two coding problems in 90 minutes, one on sliding window over an array and one on shortest path in a grid with obstacles. The interviewer in round one asked me to find the k most frequent elements and pushed on why a heap of size k is better than sorting. Every question ended with "what is the time and space complexity, and can you do better?"
+---
+role: SDE 1
+year: 2025
+concepts: DSA, OOP
+The second round was low level design: design a parking lot. They cared about which classes I chose, how a new vehicle type could be added without changing existing code, and where I would use an interface. After that a coding question on merging overlapping intervals. They wanted clean code with meaningful names, not just a working solution.
+---
+role: SDE Intern
+year: 2024
+concepts: DSA, OS
+The interviewer asked me to design an LRU cache and write it fully. Follow-ups were about making it thread safe, which led to mutex versus semaphore and what a race condition is. Then a tree question: lowest common ancestor in a binary tree. He asked me to dry run on an example before running out of time.
+---
+role: SDE 1
+year: 2024
+concepts: DBMS, DSA
+Bar raiser round mixed behavioural questions with one technical problem. For each leadership principle I had to give a specific example with numbers. The technical part was designing a schema for an order system, choosing indexes for the common queries and explaining what happens to write speed when you add more indexes.
+---
+role: SDE Intern
+year: 2025
+concepts: DSA, CN
+Final round started with what happens when you type a URL in the browser, going down to DNS and the TCP handshake. Then a graph problem: number of islands, followed by how I would change it if the grid did not fit in memory. They prefer you to think aloud and state assumptions before coding.

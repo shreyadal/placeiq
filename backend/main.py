@@ -9,10 +9,11 @@ import json
 import logging
 import os
 import tempfile
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -21,10 +22,44 @@ from backend.grading import grade
 
 log = logging.getLogger(__name__)
 
+# session id -> lock held while that session's next question is chosen
+next_locks = {}
+
+
+def warm_up():
+    """Load every model once, so the first question and the first answer do not wait for it.
+
+    Importing torch, loading the embedding model and loading the Ollama model into memory
+    add up to most of a minute when they happen inside the first requests instead.
+    """
+    def embedder():
+        from rag.store import embed
+        embed(["warm up"])
+
+    def ollama_model():
+        import ollama
+
+        from backend.grading import MODEL, TIMEOUT_SECONDS
+        # a request without a prompt only loads the model
+        ollama.Client(timeout=TIMEOUT_SECONDS).generate(model=MODEL, keep_alive="30m")
+
+    def whisper():
+        from backend import speech
+        speech._model()
+
+    for step in (embedder, ollama_model, lambda: selection.mastery_for([]), whisper):
+        try:
+            step()
+        except Exception as e:
+            log.warning("warm-up step failed (the app still works, the first request is just slower): %s", e)
+
 
 @asynccontextmanager
 async def lifespan(app):
     db.init()
+    # PLACEIQ_WARMUP=0 skips this (used by the tests)
+    if os.environ.get("PLACEIQ_WARMUP", "1") != "0":
+        threading.Thread(target=warm_up, daemon=True).start()
     yield
 
 
@@ -99,18 +134,48 @@ def list_companies():
     return companies()
 
 
+@app.get("/companies/{company}/experiences")
+def company_experiences(company: str, concepts: str):
+    """Past interview notes from a company that relate to the given comma-separated concepts."""
+    from rag.store import companies, retrieve
+
+    if company not in companies():
+        raise HTTPException(404, "unknown company")
+    return retrieve(company, [c for c in concepts.split(",") if c], k=3)
+
+
+def prepare_next_question(session_id):
+    """Generate a company session's next question before the browser asks for it.
+
+    Run as a background task once the reply has been sent, so the generation overlaps
+    with the candidate reading their feedback. /next then finds the question already stored, or
+    waits on the session's lock for the rest of the generation.
+    """
+    try:
+        next_question(session_id)
+    except HTTPException:
+        pass  # the session ended meanwhile
+    except Exception:
+        log.exception("preparing the next question failed; /next will try again")
+
+
 @app.post("/sessions")
-def start_session(body: StartSession):
+def start_session(body: StartSession, background: BackgroundTasks):
     with db.connect() as conn:
         cursor = conn.execute(
             "INSERT INTO sessions (user_id, company, num_questions, started_at) VALUES (?, ?, ?, ?)",
             (body.user_id, body.company or None, body.num_questions, db.now_ms()))
+        if body.company:
+            background.add_task(prepare_next_question, cursor.lastrowid)
         return {"session_id": cursor.lastrowid, "num_questions": body.num_questions}
 
 
 @app.get("/sessions/{session_id}/next")
 def next_question(session_id: int):
-    with db.connect() as conn:
+    # one request per session at a time: generating a question takes seconds, and a second
+    # request arriving meanwhile (React runs effects twice in dev, or a page refresh) would
+    # otherwise add another question instead of getting the one being prepared
+    with next_locks.setdefault(session_id, threading.Lock()), db.connect() as conn:
         session = get_session(conn, session_id)
         if session["ended_at"]:
             raise HTTPException(409, "session has ended")
@@ -157,7 +222,7 @@ def next_question(session_id: int):
 
 
 @app.post("/sessions/{session_id}/answers")
-def submit_answer(session_id: int, body: SubmitAnswer):
+def submit_answer(session_id: int, body: SubmitAnswer, background: BackgroundTasks):
     with db.connect() as conn:
         session = get_session(conn, session_id)
         question = db.to_dict(conn.execute(
@@ -168,7 +233,7 @@ def submit_answer(session_id: int, body: SubmitAnswer):
         if conn.execute("SELECT 1 FROM answers WHERE session_question_id = ?", (question["id"],)).fetchone():
             raise HTTPException(409, "this question was already answered")
 
-    # grading calls an external API, so it runs outside the database connection
+    # grading calls the model and can take seconds, so it runs outside the database connection
     result = grade(question["question"], question["reference_answer"], question["key_points"], body.answer_text)
 
     with db.connect() as conn:
@@ -180,6 +245,8 @@ def submit_answer(session_id: int, body: SubmitAnswer):
              body.answer_text, result["score"], result["feedback"], json.dumps(result["missing_points"]),
              result["grader"], json.dumps(body.speech) if body.speech else None,
              json.dumps(body.vision) if body.vision else None, db.now_ms()))
+    if session["company"]:
+        background.add_task(prepare_next_question, session_id)
     return {**result, "reference_answer": question["reference_answer"]}
 
 

@@ -5,6 +5,7 @@ import tempfile
 # must be set before backend modules are imported
 os.environ["PLACEIQ_DB"] = os.path.join(tempfile.mkdtemp(), "test.db")
 os.environ["PLACEIQ_GRADER"] = "keyword"
+os.environ["PLACEIQ_WARMUP"] = "0"
 
 import random
 
@@ -45,6 +46,34 @@ def test_keyword_grader():
     assert grade("q", "ref", key_points, "")["score"] == 0.0
 
 
+def test_ollama_grader_scores_from_point_checks_and_falls_back(monkeypatch):
+    import ollama
+
+    from backend import grading
+
+    class FakeClient:
+        reply = ('{"checks": [{"point": 1, "candidate_said": "last in first out", "covered": true},'
+                 ' {"point": 2, "candidate_said": "nothing", "covered": true},'
+                 ' {"point": 3, "candidate_said": "you pop it", "covered": true}], "feedback": "Good start."}')
+
+        def __init__(self, **kwargs):
+            pass
+
+        def chat(self, **kwargs):
+            if FakeClient.reply is None:
+                raise ConnectionError("Ollama is not running")
+            return ollama.ChatResponse(message=ollama.Message(role="assistant", content=FakeClient.reply))
+
+    monkeypatch.delenv("PLACEIQ_GRADER")
+    monkeypatch.setattr(grading.ollama, "Client", FakeClient)
+    result = grade("q", "ref", ["LIFO", "push", "pop"], "It is last in first out and you pop it off")
+    # point 2 is marked covered but with no evidence from the answer, so it does not count
+    assert result == {"score": 0.67, "feedback": "Good start.", "missing_points": ["push"], "grader": "ollama"}
+
+    FakeClient.reply = None
+    assert grade("q", "ref", ["LIFO", "push", "pop"], "A stack is LIFO with push and pop")["grader"] == "keyword"
+
+
 def test_weak_concepts_are_asked_more():
     mastery = {"DSA": 0.9, "OS": 0.1}
     rng = random.Random(0)
@@ -62,6 +91,53 @@ def test_question_is_not_repeated_in_session():
         asked.add(selection.pick_question("DSA", 2, asked, set())["id"])
     assert len(asked) == 17
     assert selection.pick_question("DSA", 2, asked, set()) is None
+
+
+def test_company_session_uses_generated_question_and_falls_back(monkeypatch):
+    import rag.generate
+
+    generated = {"id": "gen-test", "concept": "OS", "difficulty": 2, "question": "A company-style question?",
+                 "reference_answer": "The reference.", "key_points": ["alpha", "beta"]}
+    with TestClient(app) as client:
+        assert "Amazon" in client.get("/companies").json()
+        # each question is generated in the background as soon as the session starts or an
+        # answer is graded, so the generator is patched before those calls
+        monkeypatch.setattr(rag.generate, "generate_question", lambda *args: generated)
+        session_id = client.post(
+            "/sessions", json={"user_id": "company-tester", "company": "Amazon", "num_questions": 2}).json()["session_id"]
+        q = client.get(f"/sessions/{session_id}/next").json()["question"]
+        assert q["source"] == "company" and q["question"] == "A company-style question?"
+        # when generation is unavailable the bank question is used
+        monkeypatch.setattr(rag.generate, "generate_question", lambda *args: None)
+        r = client.post(f"/sessions/{session_id}/answers", json={
+            "session_question_id": q["session_question_id"], "answer_text": "it involves alpha and beta"})
+        assert r.json()["score"] == 1.0
+        assert client.get(f"/sessions/{session_id}/next").json()["question"]["source"] == "bank"
+
+        notes = client.get("/companies/Amazon/experiences", params={"concepts": "OS,DBMS"}).json()
+        assert len(notes) == 3 and all(n["company"] == "Amazon" for n in notes)
+        assert client.get("/companies/Nowhere/experiences", params={"concepts": "OS"}).status_code == 404
+
+
+def test_simultaneous_next_requests_get_the_same_question(monkeypatch):
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+
+    import rag.generate
+
+    def slow_generate(company, concept, difficulty, exclude):
+        time.sleep(0.3)
+        return {"id": f"gen-{time.time_ns()}", "concept": concept, "difficulty": difficulty,
+                "question": f"Question {time.time_ns()}?", "reference_answer": "The reference.", "key_points": ["alpha"]}
+
+    monkeypatch.setattr(rag.generate, "generate_question", slow_generate)
+    with TestClient(app) as client:
+        session_id = client.post(
+            "/sessions", json={"user_id": "double-tester", "company": "Amazon", "num_questions": 3}).json()["session_id"]
+        with ThreadPoolExecutor(3) as pool:
+            replies = list(pool.map(lambda _: client.get(f"/sessions/{session_id}/next").json()["question"], range(3)))
+        assert len({q["session_question_id"] for q in replies}) == 1
+        assert all(q["number"] == 1 for q in replies)
 
 
 def test_full_session():

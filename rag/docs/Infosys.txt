@@ -1,0 +1,24 @@
+role: Systems Engineer
+year: 2025
+concepts: OOP, DBMS
+The interview was about 25 minutes. Questions on encapsulation and abstraction and the difference between them, what a constructor is, and method overloading. Then SQL: types of joins and a query to count employees in each department using GROUP BY.
+---
+role: Specialist Programmer
+year: 2025
+concepts: DSA
+This track had a harder coding test with three problems, including one dynamic programming question on the longest increasing subsequence and one greedy problem. In the interview I explained my approach to each, its complexity, and wrote a function to detect a cycle in a linked list.
+---
+role: Systems Engineer
+year: 2024
+concepts: OS, CN
+Basics across subjects. What a context switch is, user mode versus kernel mode, what DNS does, and HTTP versus HTTPS. The interviewer wanted simple clear definitions and asked me to relate each one to something I use daily.
+---
+role: Digital Specialist Engineer
+year: 2024
+concepts: DSA, DBMS
+I was asked to compare arrays and linked lists, explain stack and queue with uses, and write binary search. Then database questions on indexes and why searching becomes faster with them, plus what a view is.
+---
+role: Systems Engineer
+year: 2025
+concepts: OOP, ML
+Project based round. My project was a classifier, so they asked what overfitting is, why we split data into training and test sets, and the difference between classification and regression. Then the difference between an abstract class and an interface in Java.

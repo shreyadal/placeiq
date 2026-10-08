@@ -1,0 +1,24 @@
+role: Digital
+year: 2025
+concepts: DSA, OOP
+After the aptitude and coding test, the technical interview began with my final year project. Then basics: the four pillars of object oriented programming with real life examples, class versus object, and what a constructor is. One simple program on paper to check whether a string is a palindrome.
+---
+role: Ninja
+year: 2025
+concepts: DBMS
+Mostly database fundamentals. Primary key versus foreign key, the difference between DELETE, TRUNCATE and DROP, what normalisation is and the first three normal forms. I was asked to write a query with a join between a student and a marks table.
+---
+role: Digital
+year: 2024
+concepts: OS, CN
+The interviewer asked what an operating system does, process versus thread, and what a deadlock is. Then networking: the layers of the OSI model, TCP versus UDP, and the difference between an IP address and a MAC address. Short definitions with one example each were enough.
+---
+role: Prime
+year: 2024
+concepts: DSA, ML
+Since I applied for the higher track, questions were deeper. Time complexity of common sorting algorithms, how a hash table handles collisions, and a coding question on finding the second largest element in one pass. They also asked about supervised versus unsupervised learning because of a course on my resume.
+---
+role: Ninja
+year: 2025
+concepts: OOP, DBMS
+Managerial and technical together. Explain inheritance and polymorphism with code, what method overriding is, and the ACID properties. They also asked whether I am comfortable relocating and working in any technology, and to explain my project to a non-technical person.

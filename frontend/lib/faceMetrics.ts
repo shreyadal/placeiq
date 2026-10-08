@@ -156,8 +156,29 @@ const WASM_URL = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.0/was
 const MODEL_URL =
   "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
 
+let logFilterInstalled = false;
+
+/**
+ * MediaPipe's WebAssembly code prints its status lines (such as "INFO: Created TensorFlow
+ * Lite XNNPACK delegate for CPU.") through console.error. They are not errors, but the
+ * Next.js dev overlay reports every console.error as one, so they are sent to console.info.
+ */
+function quietMediaPipeInfoLogs() {
+  if (logFilterInstalled) return;
+  logFilterInstalled = true;
+  const original = console.error;
+  console.error = (...args: unknown[]) => {
+    if (typeof args[0] === "string" && /^\s*(INFO|W\d{4}|I\d{4})\b/.test(args[0])) {
+      console.info(...args);
+    } else {
+      original(...args);
+    }
+  };
+}
+
 /** Downloads the wasm runtime and the model (about 4 MB) and builds a landmarker for video. */
 export async function createFaceLandmarker() {
+  quietMediaPipeInfoLogs();
   const fileset = await FilesetResolver.forVisionTasks(WASM_URL);
   return FaceLandmarker.createFromOptions(fileset, {
     baseOptions: { modelAssetPath: MODEL_URL, delegate: "GPU" },

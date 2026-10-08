@@ -1,0 +1,24 @@
+role: SDE Intern
+year: 2025
+concepts: DSA
+Machine coding round of 90 minutes: build an in-memory splitwise-like expense sharing app that runs from the command line. They judged working code first, then how modular it was. After that a problem solving round with a question on the next greater element using a stack and one on topological sort.
+---
+role: SDE 1
+year: 2025
+concepts: OOP, DSA
+Low level design of a snake and ladder game. The interviewer asked which design patterns I used and where the factory pattern would help. He also asked the difference between composition and inheritance using my own classes as the example. One coding question on the top view of a binary tree.
+---
+role: SDE Intern
+year: 2024
+concepts: DBMS
+A round focused on databases. Write a query for the second highest salary per department, explain the difference between clustered and non-clustered indexes, and what isolation level you would use for a checkout flow. Then ACID properties with a real example from an e-commerce order.
+---
+role: SDE 1
+year: 2024
+concepts: DSA, CN
+Hiring manager round. Design a notification service for order updates: how messages are queued, what happens if a delivery fails, and how to avoid sending duplicates. He also asked about HTTP versus WebSockets for live order tracking and what a load balancer does.
+---
+role: SDE Intern
+year: 2025
+concepts: DSA, OS
+Two problems: rotting oranges with BFS and a heap problem on merging k sorted lists. In between he asked what a deadlock is and the four conditions for it, and how I would avoid one when two services lock the same two rows in a different order.

@@ -1,0 +1,24 @@
+role: Project Engineer
+year: 2025
+concepts: OOP
+A short technical interview. What is object oriented programming, examples of inheritance and polymorphism, and the difference between a class and an object. I was asked to write a small program to swap two numbers without a third variable and explain it line by line.
+---
+role: Turbo
+year: 2025
+concepts: DSA, DBMS
+For the higher package track there was a coding question on finding duplicates in an array and one on reversing a linked list. Database questions followed: what a primary key is, what joins are, and the difference between WHERE and HAVING.
+---
+role: Project Engineer
+year: 2024
+concepts: CN, OS
+Questions were from the basics of every core subject. What is an IP address, what does a router do versus a switch, and what are the layers in the OSI model. From operating systems: what is a process, what is scheduling, and name some scheduling algorithms.
+---
+role: Elite
+year: 2024
+concepts: DSA
+I was asked which data structure I would use for an undo feature and why, how a queue differs from a stack, and the complexity of binary search. One program to find the factorial with recursion and a question on what happens if the recursion is too deep.
+---
+role: Project Engineer
+year: 2025
+concepts: DBMS, ML
+My resume mentioned a data analysis internship. They asked how I cleaned the data, what SQL queries I wrote, and what normalisation is. Then simple machine learning questions: what is training data and what does accuracy mean.
