@@ -40,7 +40,7 @@ export type Grade = {
   score: number;
   feedback: string;
   missing_points: string[];
-  grader: "ollama" | "keyword" | "none";
+  grader: "gemini" | "ollama" | "keyword" | "none";
   reference_answer: string;
 };
 

@@ -18,7 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from backend import db, selection
-from backend.grading import grade
+from backend.grading import grade, grader_name
 
 log = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ def warm_up():
         speech._model()
 
     steps = [embedder, whisper]
-    if os.environ.get("PLACEIQ_GRADER", "keyword") == "ollama":
+    if grader_name() == "ollama":
         steps.append(ollama_model)
     if selection.use_dkt():
         steps.append(lambda: selection.mastery_for([]))
@@ -128,7 +128,7 @@ def mastery_source():
 @app.get("/health")
 def health():
     return {"status": "ok", "mastery_source": mastery_source(),
-            "grader": os.environ.get("PLACEIQ_GRADER", "keyword")}
+            "grader": grader_name()}
 
 
 @app.get("/concepts")

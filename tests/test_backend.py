@@ -74,6 +74,47 @@ def test_ollama_grader_scores_from_point_checks_and_falls_back(monkeypatch):
     assert grade("q", "ref", ["LIFO", "push", "pop"], "A stack is LIFO with push and pop")["grader"] == "keyword"
 
 
+def test_gemini_grader_scores_from_point_checks_and_falls_back(monkeypatch):
+    from google import genai
+
+    class FakeModels:
+        reply = ('{"checks": [{"point": 1, "candidate_said": "last in first out", "covered": true},'
+                 ' {"point": 2, "candidate_said": "nothing", "covered": true},'
+                 ' {"point": 3, "candidate_said": "you pop it", "covered": true}], "feedback": "Good start."}')
+
+        def generate_content(self, model, contents, config):
+            assert "<candidate_answer>" in contents and config.temperature == 0
+            if FakeModels.reply is None:
+                raise ConnectionError("no network")
+            return type("Response", (), {"text": FakeModels.reply})()
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            self.models = FakeModels()
+
+    monkeypatch.setenv("PLACEIQ_GRADER", "gemini")
+    monkeypatch.setattr(genai, "Client", FakeClient)
+    result = grade("q", "ref", ["LIFO", "push", "pop"], "It is last in first out and you pop it off")
+    # point 2 is marked covered but with no evidence from the answer, so it does not count
+    assert result == {"score": 0.67, "feedback": "Good start.", "missing_points": ["push"], "grader": "gemini"}
+
+    FakeModels.reply = None
+    assert grade("q", "ref", ["LIFO", "push", "pop"], "A stack is LIFO with push and pop")["grader"] == "keyword"
+
+
+def test_gemini_is_the_default_only_when_a_key_is_set(monkeypatch):
+    from backend.grading import grader_name
+
+    monkeypatch.delenv("PLACEIQ_GRADER")
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    assert grader_name() == "keyword"
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    assert grader_name() == "gemini"
+    monkeypatch.setenv("PLACEIQ_GRADER", "keyword")
+    assert grader_name() == "keyword"
+
+
 def test_weak_concepts_are_asked_more():
     mastery = {"DSA": 0.9, "OS": 0.1}
     rng = random.Random(0)

@@ -20,6 +20,15 @@ company-style questions, `tests/` holds the backend tests and `scripts/` the dem
 
 Needs Python 3.11 and Node 20+. No GPU, Ollama or trained model is needed.
 
+For AI grading, put a [Gemini API key](https://aistudio.google.com/apikey) in a file named `.env`
+at the repo root (it is gitignored, so the key is never committed):
+
+```
+GEMINI_API_KEY=your-key
+```
+
+Without a key the app still works and grades by keywords.
+
 ```
 python -m venv venv
 venv\Scripts\activate
@@ -44,12 +53,13 @@ python -m pytest tests                                  # backend + RAG tests
 The first spoken answer and the first company question are slower, because the Whisper and
 embedding models download on first use.
 
-Settings (environment variables for the backend):
+Settings (environment variables for the backend, or lines in `.env`):
 
 | variable | default | meaning |
 |---|---|---|
 | `PLACEIQ_USE_DKT` | `0` | `0`: the next concept is chosen from the candidate's own average score per concept in the current session (weaker concept, more likely). `1`: chosen from the trained DKT model's predictions over the user's whole history |
-| `PLACEIQ_GRADER` | `keyword` | `keyword`: the share of key points mentioned. `ollama`: a local LLM checks each key point (needs [Ollama](https://ollama.com) running with `OLLAMA_MODEL`, default `llama3.2`) |
+| `PLACEIQ_GRADER` | `gemini` if `GEMINI_API_KEY` is set, else `keyword` | `gemini`: Gemini checks each key point against the answer and writes feedback. `keyword`: the share of key points whose words appear. `ollama`: like gemini but with a local model (needs [Ollama](https://ollama.com) running with `OLLAMA_MODEL`, default `llama3.2`) |
+| `GEMINI_MODEL` | `gemini-3.5-flash` | Gemini model used for grading |
 | `WHISPER_MODEL` | `base.en` | faster-whisper model used for transcription |
 
 `GET /health` reports which mastery source and grader are active.
@@ -80,7 +90,9 @@ On a laptop CPU the interview run takes about a minute and the ASSISTments run a
   (see [ml/RESULTS.md](ml/RESULTS.md)).
 - **The model is trained on simulated candidates,** not on answers from real users of the app.
   Answers stored by the app (`data/placeiq.db`) are not yet fed back into training.
-- **LLM grading is off by default.** Keyword grading is approximate. Ollama grading is
-  implemented but must be switched on with `PLACEIQ_GRADER=ollama`.
+- **Gemini grading depends on Google's free tier.** When the model is busy (503) or slow,
+  each answer is retried up to 3 times, and if Gemini still fails that answer is graded by
+  keywords instead (shown as "Keyword match" in the app). Grading an answer takes about 5–10 s.
+  With Gemini on, candidates' answers are sent to Google.
 - **Face metrics were not tested with a real face** in this round: the automated browser test
   used Chrome's fake camera, which shows a test pattern.

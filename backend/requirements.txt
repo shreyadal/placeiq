@@ -4,6 +4,8 @@ fastapi
 uvicorn
 python-multipart
 ollama
+google-genai
+python-dotenv
 faster-whisper
 # faster-whisper 1.2 calls av.open(metadata_errors=...), which PyAV 19 removed
 av<19
