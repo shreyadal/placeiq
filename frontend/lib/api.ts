@@ -95,6 +95,8 @@ export type Progress = {
   sessions: ProgressPoint[];
   mastery: Record<string, number>;
   weak_concepts: string[];
+  // "dkt": predicted by the knowledge tracing model; "scores": the user's own average scores
+  mastery_source: "dkt" | "scores";
 };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {

@@ -148,7 +148,8 @@ export default function Results() {
         <div className="between baseline">
           <h2>Mastery by concept</h2>
           <span className="muted small">
-            {count === 1 ? "Session 1" : `Sessions 1–${count}`} · weakest first · predicted chance of a good answer
+            {count === 1 ? "Session 1" : `Sessions 1–${count}`} · weakest first ·{" "}
+            {progress.mastery_source === "dkt" ? "predicted chance of a good answer" : "average score so far"}
           </span>
         </div>
         <MasteryChart concepts={progress.concepts} sessions={progress.sessions} weakConcepts={progress.weak_concepts} />

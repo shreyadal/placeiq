@@ -10,18 +10,21 @@ data format and the prediction function the backend calls.
 
 ## Run it
 
-All commands run from the project root with the venv active.
+All commands run from the project root with the venv active. The data in `data/` is
+already prepared by `data/prepare.py` (see [data/README.md](../data/README.md)).
 
 ```
-python -m ml.preprocess assist2009                       # raw csv -> pykt files
-python -m ml.train --model dkt  --dataset assist2009     # then sakt, then akt
-python -m ml.fake_interviews                             # fake interview logs -> data/interview/logs.csv
-python -m ml.interview_data                              # logs.csv -> pykt files
-python -m ml.train --model dkt  --dataset interview
-python -m ml.predict u0001                               # weakest concepts for one user
+python -m ml.sequences assist2009                        # prepared split -> pykt's windowed files
+python -m ml.sequences interview
+python -m ml.train --model dkt --dataset assist2009 --epochs 30
+python -m ml.train --model dkt --dataset interview  --epochs 30
+python -m ml.test_model                                  # predicted vs true weak concepts
+python -m ml.predict u0001                               # weakest concepts for one simulated user
 ```
 
-Scores are written to [results.md](results.md).
+Scores are written to [results.json](results.json) and reported in [RESULTS.md](RESULTS.md).
+`ml.preprocess`, `ml.fake_interviews` and `ml.interview_data` are the older route from the raw
+ASSISTments file and freshly generated logs; they are not needed with the prepared data.
 
 ## The data format pykt expects
 
@@ -100,7 +103,7 @@ file names, and `num_q` / `num_c`, which set the size of the embedding tables.
 
 Because of step 1 above, a question with two concepts gives the model the answer on the
 first row and then asks it to predict the same answer on the second. That is a label leak
-and it inflates AUC by several points. `test AUC (no repeats)` in results.md scores only
+and it inflates AUC by several points. `test AUC (no repeats)` in RESULTS.md scores only
 `is_repeat = 0` rows and is the number to quote.
 
 ## Interview data

@@ -64,7 +64,7 @@ def test_ollama_grader_scores_from_point_checks_and_falls_back(monkeypatch):
                 raise ConnectionError("Ollama is not running")
             return ollama.ChatResponse(message=ollama.Message(role="assistant", content=FakeClient.reply))
 
-    monkeypatch.delenv("PLACEIQ_GRADER")
+    monkeypatch.setenv("PLACEIQ_GRADER", "ollama")
     monkeypatch.setattr(grading.ollama, "Client", FakeClient)
     result = grade("q", "ref", ["LIFO", "push", "pop"], "It is last in first out and you pop it off")
     # point 2 is marked covered but with no evidence from the answer, so it does not count
@@ -79,6 +79,30 @@ def test_weak_concepts_are_asked_more():
     rng = random.Random(0)
     picks = [selection.pick_concept(mastery, rng) for _ in range(500)]
     assert picks.count("OS") > 5 * picks.count("DSA")
+
+
+def test_default_mastery_comes_from_session_scores(monkeypatch):
+    monkeypatch.delenv("PLACEIQ_USE_DKT", raising=False)
+    mastery = selection.score_mastery([("OS", 0.0), ("OS", 0.0), ("DSA", 1.0)])
+    assert mastery["OS"] == round(0.5 / 3, 4) and mastery["DSA"] == 0.75 and mastery["CN"] == 0.5
+    # earlier sessions are ignored: only the current session's scores steer the choice
+    rng = random.Random(0)
+    picks = [selection.next_question([("OS", 1.0)] * 20, [("OS", 0.0), ("OS", 0.0)], set(), set(), rng)[0]["concept"]
+             for _ in range(300)]
+    assert picks.count("OS") > 2 * picks.count("DSA")
+
+
+def test_dkt_is_used_only_when_switched_on(monkeypatch):
+    import sys
+    import types
+
+    fake = types.ModuleType("ml.predict")
+    fake.predict_mastery = lambda history: {c: 0.123 for c in selection.concepts()}
+    monkeypatch.setitem(sys.modules, "ml.predict", fake)
+    monkeypatch.delenv("PLACEIQ_USE_DKT", raising=False)
+    assert selection.mastery_for([("OS", 1.0)])["OS"] == 0.75
+    monkeypatch.setenv("PLACEIQ_USE_DKT", "1")
+    assert selection.mastery_for([("OS", 1.0)])["OS"] == 0.123
 
 
 def test_difficulty_follows_mastery():

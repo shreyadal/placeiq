@@ -1,6 +1,8 @@
 """Grade an interview answer from 0 to 1 against a reference answer.
 
-A local model served by Ollama decides which key points the answer covers, and the score
+PLACEIQ_GRADER picks the grader. The default, "keyword", checks which key points appear
+in the answer and needs nothing else installed. With PLACEIQ_GRADER=ollama a local model
+served by Ollama decides which key points the answer covers, and the score
 is the share covered. If Ollama is not running or the model
 is not pulled, a keyword check is used instead, so the app still works; its scores are
 rougher and are labelled grader="keyword" so the UI can say so.
@@ -53,8 +55,8 @@ def grade(question, reference_answer, key_points, answer):
     """Returns {"score", "feedback", "missing_points", "grader"}."""
     if len(answer.split()) < 3:
         return {"score": 0.0, "feedback": "No answer was given.", "missing_points": list(key_points), "grader": "none"}
-    # PLACEIQ_GRADER=keyword skips the model call (used by the tests and for quick demos)
-    if os.environ.get("PLACEIQ_GRADER") == "keyword" or not key_points:
+    # the keyword grader is the default; PLACEIQ_GRADER=ollama turns on the model
+    if os.environ.get("PLACEIQ_GRADER", "keyword") != "ollama" or not key_points:
         return _grade_with_keywords(key_points, answer)
     try:
         return _grade_with_ollama(question, reference_answer, key_points, answer)

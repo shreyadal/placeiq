@@ -47,7 +47,12 @@ def warm_up():
         from backend import speech
         speech._model()
 
-    for step in (embedder, ollama_model, lambda: selection.mastery_for([]), whisper):
+    steps = [embedder, whisper]
+    if os.environ.get("PLACEIQ_GRADER", "keyword") == "ollama":
+        steps.append(ollama_model)
+    if selection.use_dkt():
+        steps.append(lambda: selection.mastery_for([]))
+    for step in steps:
         try:
             step()
         except Exception as e:
@@ -115,9 +120,15 @@ def company_question(company, concept, difficulty, exclude):
         return None
 
 
+def mastery_source():
+    """What the mastery numbers come from: "dkt" (the trained model) or "scores" (the user's own averages)."""
+    return "dkt" if selection.use_dkt() else "scores"
+
+
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "mastery_source": mastery_source(),
+            "grader": os.environ.get("PLACEIQ_GRADER", "keyword")}
 
 
 @app.get("/concepts")
@@ -193,10 +204,12 @@ def next_question(session_id: int):
             return {"done": True, "question": None}
 
         history = db.user_history(conn, session["user_id"])
+        session_history = [(r["concept"], r["score"]) for r in conn.execute(
+            "SELECT concept, score FROM answers WHERE session_id = ? ORDER BY id", (session_id,))]
         asked_ids = {row["question_id"] for row in asked}
         seen_before = {row["question_id"] for row in conn.execute(
             "SELECT DISTINCT question_id FROM answers WHERE user_id = ?", (session["user_id"],))}
-        question, mastery = selection.next_question(history, asked_ids, seen_before)
+        question, mastery = selection.next_question(history, session_history, asked_ids, seen_before)
         if question is None:
             return {"done": True, "question": None}
         source = "bank"
@@ -332,7 +345,7 @@ def user_progress(user_id: str):
         })
     current = selection.mastery_for(history)
     return {
-        "user_id": user_id, "concepts": selection.concepts(), "sessions": points,
+        "user_id": user_id, "concepts": selection.concepts(), "sessions": points, "mastery_source": mastery_source(),
         "mastery": current, "weak_concepts": sorted(current, key=current.get)[:3] if history else [],
     }
 

@@ -4,9 +4,12 @@ __pycache__/
 node_modules/
 .next/
 
-# data/ holds downloaded datasets and generated files; only the question bank is tracked
-data/*
-!data/questions.json
+# data/: the question bank, the two cleaned csvs and the files data/prepare.py makes are
+# tracked; what ml/sequences.py and pykt generate from them is not
+data/data_config.json
+data/*/*_sequences.csv
+data/*/*.pkl
+data/placeiq.db
 
 # trained checkpoints, databases, vector store
 ml/saved_model/
@@ -14,3 +17,6 @@ ml/saved_model/
 *.db
 rag/chroma/
 wandb/
+
+# local server logs
+*_server.log

@@ -1,0 +1,77 @@
+Start preprocessing D:/placeiq/data/assist2009\train_valid_sequences.csv fold: _0...
+interaction_num: 53566
+file path: D:/placeiq/data/assist2009\train_valid_sequences.csv, qlen: 741, clen: 741, rlen: 741
+Start preprocessing D:/placeiq/data/assist2009\train_valid_sequences.csv fold: _1_2_3_4...
+interaction_num: 221041
+file path: D:/placeiq/data/assist2009\train_valid_sequences.csv, qlen: 3016, clen: 3016, rlen: 3016
+Start preprocessing D:/placeiq/data/assist2009\test_sequences.csv fold: _-1...
+interaction_num: 62808
+file path: D:/placeiq/data/assist2009\test_sequences.csv, qlen: 904, clen: 904, rlen: 904
+ts.shape: (52825,), ps.shape: (52825,)
+Epoch: 1, validauc: 0.8073, validacc: 0.7648, best epoch: 1, best auc: 0.8073, train loss: 0.556937227761959, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\assist2009\dkt
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+ts.shape: (52825,), ps.shape: (52825,)
+Epoch: 2, validauc: 0.823, validacc: 0.7707, best epoch: 2, best auc: 0.823, train loss: 0.47862245571248047, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\assist2009\dkt
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+ts.shape: (52825,), ps.shape: (52825,)
+Epoch: 3, validauc: 0.8283, validacc: 0.776, best epoch: 3, best auc: 0.8283, train loss: 0.4629571700662236, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\assist2009\dkt
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+ts.shape: (52825,), ps.shape: (52825,)
+Epoch: 4, validauc: 0.8302, validacc: 0.7782, best epoch: 4, best auc: 0.8302, train loss: 0.4548434611569221, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\assist2009\dkt
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+ts.shape: (52825,), ps.shape: (52825,)
+Epoch: 5, validauc: 0.8302, validacc: 0.7782, best epoch: 4, best auc: 0.8302, train loss: 0.44896369187975144, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\assist2009\dkt
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+ts.shape: (52825,), ps.shape: (52825,)
+Epoch: 6, validauc: 0.8317, validacc: 0.779, best epoch: 6, best auc: 0.8317, train loss: 0.44436388177190517, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\assist2009\dkt
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+ts.shape: (52825,), ps.shape: (52825,)
+Epoch: 7, validauc: 0.8317, validacc: 0.779, best epoch: 6, best auc: 0.8317, train loss: 0.4398525204141765, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\assist2009\dkt
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+ts.shape: (52825,), ps.shape: (52825,)
+Epoch: 8, validauc: 0.8317, validacc: 0.779, best epoch: 6, best auc: 0.8317, train loss: 0.4359232768609787, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\assist2009\dkt
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+ts.shape: (52825,), ps.shape: (52825,)
+Epoch: 9, validauc: 0.8317, validacc: 0.779, best epoch: 6, best auc: 0.8317, train loss: 0.43246396997248393, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\assist2009\dkt
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+ts.shape: (52825,), ps.shape: (52825,)
+Epoch: 10, validauc: 0.8317, validacc: 0.779, best epoch: 6, best auc: 0.8317, train loss: 0.4294290974039187, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\assist2009\dkt
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+ts.shape: (52825,), ps.shape: (52825,)
+Epoch: 11, validauc: 0.8317, validacc: 0.779, best epoch: 6, best auc: 0.8317, train loss: 0.4248921763202534, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\assist2009\dkt
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+ts.shape: (52825,), ps.shape: (52825,)
+Epoch: 12, validauc: 0.8317, validacc: 0.779, best epoch: 6, best auc: 0.8317, train loss: 0.42036377349369447, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\assist2009\dkt
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+ts.shape: (52825,), ps.shape: (52825,)
+Epoch: 13, validauc: 0.8317, validacc: 0.779, best epoch: 6, best auc: 0.8317, train loss: 0.4166910349607922, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\assist2009\dkt
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+ts.shape: (52825,), ps.shape: (52825,)
+Epoch: 14, validauc: 0.8317, validacc: 0.779, best epoch: 6, best auc: 0.8317, train loss: 0.4129869142753755, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\assist2009\dkt
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+ts.shape: (52825,), ps.shape: (52825,)
+Epoch: 15, validauc: 0.8317, validacc: 0.779, best epoch: 6, best auc: 0.8317, train loss: 0.4094773917268202, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\assist2009\dkt
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+ts.shape: (52825,), ps.shape: (52825,)
+Epoch: 16, validauc: 0.8317, validacc: 0.779, best epoch: 6, best auc: 0.8317, train loss: 0.40587648443313684, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\assist2009\dkt
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+ts.shape: (61904,), ps.shape: (61904,)
+{
+  "dataset": "assist2009",
+  "model": "dkt",
+  "valid_auc": 0.8317,
+  "valid_acc": 0.779,
+  "best_epoch": 6,
+  "max_epochs": 30,
+  "train_minutes": 7.9,
+  "config": {
+    "dropout": 0.2,
+    "emb_size": 200
+  },
+  "lr": 0.001,
+  "batch_size": 64,
+  "seed": 42,
+  "test_auc": 0.823,
+  "test_acc": 0.7652,
+  "test_auc_no_repeat": 0.7519
+}

@@ -9,7 +9,6 @@ DATA_DIR = ROOT / "data"
 CONFIG_PATH = DATA_DIR / "data_config.json"
 CKPT_DIR = ROOT / "ml" / "saved_model"
 RESULTS_JSON = ROOT / "ml" / "results.json"
-RESULTS_MD = ROOT / "ml" / "results.md"
 
 # pykt cuts every student's history into windows of MAXLEN interactions and pads the last one with -1
 MAXLEN = 200

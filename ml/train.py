@@ -17,7 +17,7 @@ from pykt.datasets import init_dataset4train
 from pykt.models import evaluate, init_model, load_model, train_model
 from pykt.utils import set_seed
 
-from ml.common import (CKPT_DIR, EMB_TYPE, LEARNING_RATES, MODEL_CONFIGS, RESULTS_JSON, RESULTS_MD,
+from ml.common import (CKPT_DIR, EMB_TYPE, LEARNING_RATES, MODEL_CONFIGS, RESULTS_JSON,
                        load_data_config, patch_pykt_for_cpu)
 
 
@@ -93,33 +93,11 @@ def auc_without_repeats(pred_file, test_csv):
 
 
 def record_result(result):
-    """Keep one row per (dataset, model) in results.json and regenerate results.md from it."""
+    """Keep one row per (dataset, model) in results.json; ml/RESULTS.md reports from it."""
     results = json.loads(RESULTS_JSON.read_text(encoding="utf8")) if RESULTS_JSON.exists() else []
     results = [r for r in results if (r["dataset"], r["model"]) != (result["dataset"], result["model"])]
     results.append(result)
     RESULTS_JSON.write_text(json.dumps(results, indent=2), encoding="utf8")
-
-    lines = [
-        "# Knowledge tracing results",
-        "",
-        "AUC of predicting whether the next answer is correct. Validation is fold 0 of the",
-        "training students; test is the 20% of students pykt holds out. All runs on CPU.",
-        "",
-        "- **test AUC** is pykt's default: every (question, concept) row is scored.",
-        "- **test AUC (no repeats)** scores only the first row of each question. A question with",
-        "  several concepts becomes several rows with the same response, so on the later rows the",
-        "  model has already seen the answer. This column removes that leak and is the fairer number.",
-        "",
-        "| dataset | model | test AUC | test AUC (no repeats) | test acc | valid AUC | best epoch / max | train time (min) | settings |",
-        "|---|---|---|---|---|---|---|---|---|",
-    ]
-    for r in results:
-        settings = ", ".join(f"{k}={v}" for k, v in r["config"].items() if k != "seq_len")
-        lines.append(
-            f"| {r['dataset']} | {r['model'].upper()} | {r['test_auc']:.4f} | {r['test_auc_no_repeat']:.4f} | "
-            f"{r['test_acc']:.4f} | {r['valid_auc']:.4f} | {r['best_epoch']} / {r['max_epochs']} | "
-            f"{r['train_minutes']} | {settings}, lr={r['lr']}, batch={r['batch_size']} |")
-    RESULTS_MD.write_text("\n".join(lines) + "\n", encoding="utf8")
 
 
 if __name__ == "__main__":

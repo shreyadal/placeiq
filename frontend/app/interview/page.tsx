@@ -425,7 +425,7 @@ export default function Interview() {
                   <div aria-hidden className="bar">
                     <div style={{ width: `${Math.round(grade.score * 100)}%` }} />
                   </div>
-                  {grade.grader === "keyword" && <span className="note">Keyword match (Ollama was not reachable)</span>}
+                  {grade.grader === "keyword" && <span className="note">Keyword match (approximate)</span>}
                 </div>
                 {speech && (
                   <div className="tile">

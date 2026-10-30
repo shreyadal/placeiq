@@ -1,0 +1,51 @@
+
+u0006  (44 answers)   Spearman -0.37   true weakest OS in predicted bottom 2: no
+  concept   predicted p(good)  true ability
+  OS                    0.225         -2.24
+  ML                    0.232         -1.23
+  DBMS                  0.239         -0.86
+  DSA                   0.269         -0.73
+  OOP                   0.151         -0.08
+  CN                    0.193          0.02
+
+u0014  (40 answers)   Spearman +0.54   true weakest DBMS in predicted bottom 2: yes
+  concept   predicted p(good)  true ability
+  DBMS                  0.845          0.87
+  ML                    0.885          1.08
+  OS                    0.832          1.28
+  CN                    0.877          1.58
+  OOP                   0.880          1.75
+  DSA                   0.898          2.93
+
+u0016  (59 answers)   Spearman +0.71   true weakest OOP in predicted bottom 2: yes
+  concept   predicted p(good)  true ability
+  OOP                   0.524         -0.35
+  DBMS                  0.876          0.15
+  OS                    0.667          0.63
+  ML                    0.933          1.25
+  CN                    0.672          1.78
+  DSA                   0.962          2.35
+
+u0019  (64 answers)   Spearman +0.77   true weakest CN in predicted bottom 2: no
+  concept   predicted p(good)  true ability
+  CN                    0.803          0.13
+  DSA                   0.517          0.26
+  OS                    0.776          0.48
+  OOP                   0.884          0.62
+  ML                    0.929          1.22
+  DBMS                  0.884          2.21
+
+u0020  (26 answers)   Spearman +1.00   true weakest CN in predicted bottom 2: yes
+  concept   predicted p(good)  true ability
+  CN                    0.402         -0.40
+  OS                    0.496          0.56
+  OOP                   0.878          1.01
+  DSA                   0.909          1.02
+  DBMS                  0.916          1.52
+  ML                    0.938          1.52
+
+held-out candidates: 80  (true ability is on a logit scale; only its ranking is compared)
+                 mean Spearman  median Spearman  weakest in bottom 2
+DKT                      0.667            0.743          54/80 = 67.5%
+score average            0.831            0.829          71/80 = 88.8%
+random                   0.000            0.000              = 33.3%

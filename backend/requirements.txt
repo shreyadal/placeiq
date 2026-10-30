@@ -9,3 +9,6 @@ faster-whisper
 av<19
 chromadb
 sentence-transformers
+scipy
+pytest
+httpx

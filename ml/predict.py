@@ -33,7 +33,7 @@ def _load():
 
 def load_history(user_id, logs_csv=None):
     """A user's (concept, score) pairs in time order, read from the interview log csv."""
-    logs_csv = logs_csv or DATA_DIR / DATASET / "logs.csv"
+    logs_csv = logs_csv or DATA_DIR / "interview_simulated.csv"
     df = pd.read_csv(logs_csv, dtype={"user_id": str})
     df = df[df["user_id"] == str(user_id)].sort_values("timestamp", kind="stable")
     return list(zip(df["concept"], df["score"]))
@@ -59,7 +59,7 @@ def predict_weak_concepts(user_id, top_k=3, history=None):
     """The top_k concepts the user is most likely to fail, weakest first.
 
     history is a list of (concept, score) pairs in time order. If it is not given, the
-    user's rows are read from data/interview/logs.csv.
+    user's rows are read from data/interview_simulated.csv.
     Returns [{"concept": "OS", "p_correct": 0.31}, ...].
     """
     if history is None:
