@@ -1,5 +1,7 @@
 venv/
 .env
+.env.*
+!.env.example
 __pycache__/
 node_modules/
 .next/
@@ -20,3 +22,16 @@ wandb/
 
 # local server logs
 *_server.log
+
+# secrets and keys
+*.pem
+*.key
+credentials*.json
+service-account*.json
+
+# local tool/editor settings
+.permissions/
+.claude/
+.idea/
+.DS_Store
+Thumbs.db
