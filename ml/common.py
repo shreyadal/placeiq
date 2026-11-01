@@ -9,6 +9,8 @@ DATA_DIR = ROOT / "data"
 CONFIG_PATH = DATA_DIR / "data_config.json"
 CKPT_DIR = ROOT / "ml" / "saved_model"
 RESULTS_JSON = ROOT / "ml" / "results.json"
+# what the app's /model page shows; written by ml.train and ml.test_model
+METRICS_JSON = ROOT / "ml" / "artifacts" / "metrics.json"
 
 # pykt cuts every student's history into windows of MAXLEN interactions and pads the last one with -1
 MAXLEN = 200
@@ -46,3 +48,11 @@ def load_data_config():
     for name in config:
         config[name]["dpath"] = (DATA_DIR / name).as_posix()
     return config
+
+
+def update_metrics(key, value):
+    """Set one top-level entry of ml/artifacts/metrics.json, keeping the others."""
+    metrics = json.loads(METRICS_JSON.read_text(encoding="utf8")) if METRICS_JSON.exists() else {}
+    metrics[key] = value
+    METRICS_JSON.parent.mkdir(parents=True, exist_ok=True)
+    METRICS_JSON.write_text(json.dumps(metrics, indent=2), encoding="utf8")

@@ -18,11 +18,16 @@ const GLOWS: Record<string, [React.CSSProperties, React.CSSProperties]> = {
     { left: "50%", top: -260, width: 1200, height: 780, marginLeft: -600 },
     { left: -240, top: 1200, width: 760, height: 700 },
   ],
+  "/model": [
+    { left: "50%", top: -260, width: 1200, height: 780, marginLeft: -600 },
+    { right: -240, top: 1100, width: 760, height: 700 },
+  ],
 };
 
 export default function SiteHeader() {
   const pathname = usePathname();
   const onResults = pathname.startsWith("/results");
+  const onModel = pathname.startsWith("/model");
   const [main, soft] = GLOWS[pathname] ?? GLOWS["/"];
 
   return (
@@ -35,11 +40,14 @@ export default function SiteHeader() {
           PlaceIQ
         </Link>
         <nav aria-label="Main" className="site-nav">
-          <Link href="/" aria-current={onResults ? undefined : "page"}>
+          <Link href="/" aria-current={onResults || onModel ? undefined : "page"}>
             New interview
           </Link>
           <Link href="/results" aria-current={onResults ? "page" : undefined}>
             Results
+          </Link>
+          <Link href="/model" aria-current={onModel ? "page" : undefined}>
+            Model
           </Link>
         </nav>
       </header>

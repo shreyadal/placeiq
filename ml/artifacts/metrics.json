@@ -1,0 +1,83 @@
+{
+  "interview": {
+    "dataset": "interview",
+    "model": "dkt",
+    "valid_auc": 0.7852,
+    "valid_acc": 0.717,
+    "best_epoch": 9,
+    "max_epochs": 30,
+    "epochs_run": 19,
+    "train_seconds": 21.0,
+    "train_minutes": 0.4,
+    "config": {
+      "dropout": 0.2,
+      "emb_size": 200
+    },
+    "lr": 0.001,
+    "batch_size": 64,
+    "seed": 42,
+    "test_auc": 0.8135,
+    "test_acc": 0.747,
+    "test_auc_no_repeat": 0.8135,
+    "train_students": 256,
+    "train_answers": 11498,
+    "valid_students": 64,
+    "valid_answers": 2728,
+    "test_students": 80,
+    "test_answers": 3625,
+    "command": "python -m ml.train --model dkt --dataset interview --epochs 30 --fold 0"
+  },
+  "assist2009": {
+    "dataset": "assist2009",
+    "model": "dkt",
+    "valid_auc": 0.8317,
+    "valid_acc": 0.779,
+    "best_epoch": 6,
+    "max_epochs": 30,
+    "epochs_run": 16,
+    "train_seconds": 259.2,
+    "train_minutes": 4.3,
+    "config": {
+      "dropout": 0.2,
+      "emb_size": 200
+    },
+    "lr": 0.001,
+    "batch_size": 64,
+    "seed": 42,
+    "test_auc": 0.823,
+    "test_acc": 0.7652,
+    "test_auc_no_repeat": 0.7519,
+    "train_students": 2465,
+    "train_answers": 185555,
+    "valid_students": 617,
+    "valid_answers": 43912,
+    "test_students": 770,
+    "test_answers": 53146,
+    "command": "python -m ml.train --model dkt --dataset assist2009 --epochs 30 --fold 0"
+  },
+  "weak_concepts": {
+    "command": "python -m ml.test_model",
+    "candidates": 80,
+    "concepts": [
+      "CN",
+      "DBMS",
+      "DSA",
+      "ML",
+      "OOP",
+      "OS"
+    ],
+    "random_top2_rate": 0.3333,
+    "dkt": {
+      "mean_spearman": 0.6669,
+      "median_spearman": 0.7429,
+      "weakest_in_top2": 54,
+      "weakest_in_top2_rate": 0.675
+    },
+    "score_average": {
+      "mean_spearman": 0.8305,
+      "median_spearman": 0.8286,
+      "weakest_in_top2": 71,
+      "weakest_in_top2_rate": 0.8875
+    }
+  }
+}

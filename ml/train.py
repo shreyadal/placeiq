@@ -8,6 +8,7 @@ best validation AUC is kept, then scored once on the held-out 20% test students.
 import argparse
 import ast
 import json
+import sys
 import time
 
 import pandas as pd
@@ -17,8 +18,11 @@ from pykt.datasets import init_dataset4train
 from pykt.models import evaluate, init_model, load_model, train_model
 from pykt.utils import set_seed
 
-from ml.common import (CKPT_DIR, EMB_TYPE, LEARNING_RATES, MODEL_CONFIGS, RESULTS_JSON,
-                       load_data_config, patch_pykt_for_cpu)
+from ml.common import (CKPT_DIR, EMB_TYPE, LEARNING_RATES, METRICS_JSON, MODEL_CONFIGS, RESULTS_JSON,
+                       load_data_config, patch_pykt_for_cpu, update_metrics)
+
+# pykt's train_model stops once this many epochs pass without a better validation AUC
+EARLY_STOP_PATIENCE = 10
 
 
 def train(model_name, dataset, epochs, fold=0, batch_size=64, seed=42, eval_only=False):
@@ -47,6 +51,8 @@ def train(model_name, dataset, epochs, fold=0, batch_size=64, seed=42, eval_only
             "dataset": dataset, "model": model_name,
             "valid_auc": round(float(valid_auc), 4), "valid_acc": round(float(valid_acc), 4),
             "best_epoch": int(best_epoch), "max_epochs": epochs,
+            "epochs_run": min(int(best_epoch) + EARLY_STOP_PATIENCE, epochs),
+            "train_seconds": round(time.time() - start, 1),
             "train_minutes": round((time.time() - start) / 60, 1),
             "config": model_config, "lr": LEARNING_RATES[model_name], "batch_size": batch_size, "seed": seed,
         }
@@ -63,6 +69,10 @@ def train(model_name, dataset, epochs, fold=0, batch_size=64, seed=42, eval_only
 
     result_path.write_text(json.dumps(result, indent=2), encoding="utf8")
     record_result(result)
+    if model_name == "dkt":
+        update_metrics(dataset, {**result, **dataset_sizes(data_config[dataset]),
+                                 "command": "python -m ml.train " + " ".join(sys.argv[1:])})
+        print(f"wrote {METRICS_JSON}")
     print(json.dumps(result, indent=2))
     return result
 
@@ -90,6 +100,23 @@ def auc_without_repeats(pred_file, test_csv):
                     trues.append(target)
                     preds.append(score)
     return float(roc_auc_score(trues, preds))
+
+
+def dataset_sizes(config):
+    """Students and answers in each part of the split. Fold 0 of train_valid.csv is the
+    validation set, the other folds are trained on.
+
+    An ASSISTments answer tagged with several skills is several rows; is_repeat marks the
+    extra ones, so answers counts only rows with is_repeat = 0.
+    """
+    train_valid = pd.read_csv(f"{config['dpath']}/{config['train_valid_file']}")
+    test = pd.read_csv(f"{config['dpath']}/{config['test_file']}")
+    sizes = {}
+    for part, df in (("train", train_valid[train_valid["fold"] != 0]),
+                     ("valid", train_valid[train_valid["fold"] == 0]), ("test", test)):
+        sizes[f"{part}_students"] = int(df["uid"].nunique())
+        sizes[f"{part}_answers"] = int(sum(r.split(",").count("0") for r in df["is_repeat"]))
+    return sizes
 
 
 def record_result(result):

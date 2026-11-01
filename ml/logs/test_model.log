@@ -49,3 +49,4 @@ held-out candidates: 80  (true ability is on a logit scale; only its ranking is 
 DKT                      0.667            0.743          54/80 = 67.5%
 score average            0.831            0.829          71/80 = 88.8%
 random                   0.000            0.000              = 33.3%
+wrote D:\placeiq\ml\artifacts\metrics.json

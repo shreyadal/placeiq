@@ -1,15 +1,14 @@
 """Grade an interview answer from 0 to 1 against a reference answer.
 
 PLACEIQ_GRADER picks the grader:
+  keyword  (default) checks which key points' words appear in the answer; needs nothing else
   gemini   Google's Gemini API decides which key points the answer covers; needs
-           GEMINI_API_KEY. This is the default whenever that key is set.
+           GEMINI_API_KEY in the environment (or in the gitignored .env file)
   ollama   the same, with a local model served by Ollama
-  keyword  checks which key points' words appear in the answer; needs nothing else.
-           The default when no Gemini key is set.
 With gemini or ollama the score is the share of key points covered. If the model cannot
-be reached (no key, no network, Ollama not running...), the keyword check is used instead,
-so the app still works; its scores are rougher and are labelled grader="keyword" so the
-UI can say so.
+be used (no key, no network, Ollama not running...), the keyword check is used instead,
+so the app still works. Such a result says grader="keyword", plus fallback_from (the
+grader that was asked for) and fallback_reason.
 """
 import logging
 import os
@@ -19,19 +18,14 @@ import httpx
 import ollama
 from pydantic import BaseModel, ValidationError
 
+from backend import gemini
+
 log = logging.getLogger(__name__)
 
 # any model pulled into Ollama works; OLLAMA_HOST (default http://localhost:11434) is read by the client
 MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
 # the first call also loads the model into memory, which can take a while on CPU
 TIMEOUT_SECONDS = 120
-
-# any Gemini model that supports JSON output works; list them with client.models.list()
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
-# per attempt; a busy model (503) or a slow reply (504) is retried a couple of times,
-# so the worst case before falling back to the keyword grader is about a minute
-GEMINI_TIMEOUT_SECONDS = 20
-GEMINI_ATTEMPTS = 3
 
 SYSTEM_PROMPT = """You grade answers given in a mock technical interview for college placements.
 
@@ -63,9 +57,13 @@ class Grade(BaseModel):
 
 
 def grader_name():
-    """The grader in use: PLACEIQ_GRADER if set, else "gemini" when a Gemini key is present, else "keyword"."""
-    default = "gemini" if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") else "keyword"
-    return os.environ.get("PLACEIQ_GRADER", default)
+    """The grader asked for: PLACEIQ_GRADER, default "keyword"."""
+    return os.environ.get("PLACEIQ_GRADER", "keyword")
+
+
+def _fallback(key_points, answer, grader, reason):
+    log.warning("%s grading failed, using keyword grader: %s", grader, reason)
+    return {**_grade_with_keywords(key_points, answer), "fallback_from": grader, "fallback_reason": reason}
 
 
 def grade(question, reference_answer, key_points, answer):
@@ -76,22 +74,23 @@ def grade(question, reference_answer, key_points, answer):
     if grader not in ("gemini", "ollama") or not key_points:
         return _grade_with_keywords(key_points, answer)
     if grader == "gemini":
+        if not gemini.has_key():
+            return _fallback(key_points, answer, grader, "GEMINI_API_KEY is not set")
         try:
             return _grade_with_gemini(question, reference_answer, key_points, answer)
         except Exception as e:
-            # no key, a bad key, no network, quota, a blocked or unparseable reply: the app keeps working
-            log.warning("Gemini grading failed, using keyword grader: %s: %s", type(e).__name__, e)
-            return _grade_with_keywords(key_points, answer)
+            # a bad key, no network, quota, a blocked or unparseable reply: the app keeps working
+            return _fallback(key_points, answer, grader, f"{type(e).__name__}: {str(e)[:200]}")
     try:
         return _grade_with_ollama(question, reference_answer, key_points, answer)
     except ollama.ResponseError as e:
         # a 404 here means the model has not been pulled: ollama pull <model>
-        log.warning("Ollama grading failed with status %s, using keyword grader: %s", e.status_code, e.error)
+        reason = f"Ollama returned status {e.status_code}: {e.error}"
     except (ConnectionError, httpx.TransportError) as e:
-        log.warning("Could not reach Ollama, using keyword grader: %s", e)
+        reason = f"could not reach Ollama: {e}"
     except ValidationError as e:
-        log.warning("Ollama returned a grade that could not be parsed, using keyword grader: %s", e)
-    return _grade_with_keywords(key_points, answer)
+        reason = f"Ollama returned a grade that could not be parsed: {e}"
+    return _fallback(key_points, answer, grader, reason)
 
 
 def _user_message(question, reference_answer, key_points, answer):
@@ -121,30 +120,10 @@ def _score(result, key_points, answer, grader):
 
 
 def _grade_with_gemini(question, reference_answer, key_points, answer):
-    # imported here so the app runs without the package when Gemini is not used
-    from google import genai
-    from google.genai import types
-
-    # the client reads the key from GEMINI_API_KEY (or GOOGLE_API_KEY)
-    client = genai.Client(http_options=types.HttpOptions(
-        timeout=GEMINI_TIMEOUT_SECONDS * 1000,
-        retry_options=types.HttpRetryOptions(attempts=GEMINI_ATTEMPTS, initial_delay=1.0, max_delay=4.0,
-                                             http_status_codes=[408, 429, 500, 502, 503, 504])))
-    response = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=_user_message(question, reference_answer, key_points, answer),
-        config=types.GenerateContentConfig(
-            system_instruction=SYSTEM_PROMPT,
-            # the schema constrains the reply, so it parses into a Grade
-            response_mime_type="application/json",
-            response_schema=Grade,
-            # temperature 0 so the same answer gets the same score every time
-            temperature=0,
-        ),
-    )
-    if not response.text:
-        raise ValueError("Gemini returned no text (the reply may have been blocked)")
-    return _score(Grade.model_validate_json(response.text), key_points, answer, "gemini")
+    # temperature 0 so the same answer gets the same score every time
+    result = gemini.generate_json(SYSTEM_PROMPT, _user_message(question, reference_answer, key_points, answer),
+                                  Grade, temperature=0)
+    return _score(result, key_points, answer, "gemini")
 
 
 def _grade_with_ollama(question, reference_answer, key_points, answer):

@@ -4,7 +4,8 @@
 > (dropout 0.2, embedding size 200, lr 0.001, batch 64, seed 42). This is not an optimised
 > benchmark: no cross-validation, no hyperparameter search.
 
-All numbers below were produced on 2026-10-28 on a laptop CPU (Windows 11, Python 3.11.9,
+The numbers below were first produced on 2026-10-28 and reproduced exactly by a retrain on
+2026-11-01 (training times are from that retrain) on a laptop CPU (Windows 11, Python 3.11.9,
 torch 2.14.1+cpu, pykt-toolkit 0.0.38). The raw output of each run is in [logs/](logs/), and the
 training and test numbers are also in [results.json](results.json).
 
@@ -12,8 +13,8 @@ training and test numbers are also in [results.json](results.json).
 
 | dataset | test AUC | test AUC, repeats excluded | test accuracy | valid AUC | best epoch | stopped at | training time |
 |---|---|---|---|---|---|---|---|
-| ASSISTments 2009 | 0.8230 | 0.7519 | 0.7652 | 0.8317 | 6 | epoch 16 of max 30 | 7.9 min (508 s wall clock) |
-| interview (simulated) | 0.8135 | 0.8135 | 0.7470 | 0.7852 | 9 | epoch 19 of max 30 | 0.8 min (69 s wall clock) |
+| ASSISTments 2009 | 0.8230 | 0.7519 | 0.7652 | 0.8317 | 6 | epoch 16 of max 30 | 259.2 s (4 min 44 s wall clock) |
+| interview (simulated) | 0.8135 | 0.8135 | 0.7470 | 0.7852 | 9 | epoch 19 of max 30 | 21.0 s (37 s wall clock) |
 
 - **Test** is the 20% of students held out by `data/prepare.py` (770 ASSISTments students,
   80 simulated candidates). None of them was used for training or for choosing the epoch.
@@ -24,8 +25,8 @@ training and test numbers are also in [results.json](results.json).
 - **Early stopping:** pykt stops after 10 epochs without a better validation AUC and keeps
   the best epoch's weights.
 - **Training time** is what `ml/train.py` measures around training. The wall-clock time covers the
-  whole command, including data loading and the test pass. The ASSISTments run shared the CPU with
-  other jobs for part of the time, so its timing is an upper bound.
+  whole command, including data loading and the test pass. All of these numbers, with the
+  dataset sizes, are also in `ml/artifacts/metrics.json`, which the app's `/model` page shows.
 
 ## Does the model find each candidate's weak concepts?
 
@@ -37,13 +38,15 @@ candidate's true ability, which comes from the simulator. The simulator reproduc
 | method | mean Spearman (6 concepts) | median Spearman | true weakest concept in predicted 2 weakest |
 |---|---|---|---|
 | DKT | 0.667 | 0.743 | 54 / 80 = 67.5% |
-| average score per concept (the app's default heuristic) | 0.831 | 0.829 | 71 / 80 = 88.8% |
+| average score per concept (the app's fallback heuristic) | 0.831 | 0.829 | 71 / 80 = 88.8% |
 | random guess | 0 | 0 | 33.3% |
 
 **Reading this honestly:** DKT ranks concepts far better than chance, but in this first run it
 is *worse* than simply averaging the candidate's scores per concept. One likely reason: DKT only
 sees each answer as right or wrong (score ≥ 0.5), while the average uses the full 0–1 score.
-This is part of why the app uses the average by default (`PLACEIQ_USE_DKT=0`).
+The app now uses DKT by default (`PLACEIQ_USE_DKT=1`) so that the model is exercised end to end,
+and falls back to the average when the model is missing or a candidate has fewer than 3 answers.
+Improving the model past this baseline is the next step.
 
 The script also prints a per-concept table for the first 5 candidates; see
 [logs/test_model.log](logs/test_model.log).

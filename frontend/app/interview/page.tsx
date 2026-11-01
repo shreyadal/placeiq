@@ -312,6 +312,11 @@ export default function Interview() {
                   {question.source === "company" && (
                     <span className="pill accent">{company ? `${company} style` : "Company style"}</span>
                   )}
+                  {question.selection_source && (
+                    <span className="pill" title="What chose this concept: the DKT model or the average-score heuristic">
+                      Chosen by {question.selection_source}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -425,7 +430,12 @@ export default function Interview() {
                   <div aria-hidden className="bar">
                     <div style={{ width: `${Math.round(grade.score * 100)}%` }} />
                   </div>
-                  {grade.grader === "keyword" && <span className="note">Keyword match (approximate)</span>}
+                  {grade.grader === "keyword" && (
+                    <span className="note">
+                      Keyword match (approximate)
+                      {grade.fallback_from && ` · ${grade.fallback_from} was unavailable`}
+                    </span>
+                  )}
                 </div>
                 {speech && (
                   <div className="tile">

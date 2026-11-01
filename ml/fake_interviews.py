@@ -19,8 +19,18 @@ LOG_COLUMNS = ["user_id", "question_id", "concept", "score", "timestamp"]
 LOGS_PATH = DATA_DIR / "interview" / "logs.csv"
 ABILITIES_PATH = DATA_DIR / "interview" / "fake_abilities.json"
 
+# how strongly ability and question difficulty move the logit of a good answer
+ABILITY_SCALE = 1.4
+DIFFICULTY_STEP = 0.9
+
 DAY_MS = 24 * 60 * 60 * 1000
 MINUTE_MS = 60 * 1000
+
+
+def p_good_answer(ability, difficulty=2):
+    """The simulator's mean score for a candidate of this ability on a question of this difficulty."""
+    logit = ABILITY_SCALE * ability - DIFFICULTY_STEP * (difficulty - 2)
+    return 1 / (1 + math.exp(-logit))
 
 
 def generate(num_users, seed=7):
@@ -44,8 +54,7 @@ def generate(num_users, seed=7):
                 concept = rng.choice(concepts)
                 question = rng.choice(by_concept[concept])
                 # difficulty 1/2/3 shifts the logit by +0.9 / 0 / -0.9
-                logit = 1.4 * ability[concept] - 0.9 * (question["difficulty"] - 2)
-                p_good = 1 / (1 + math.exp(-logit))
+                p_good = p_good_answer(ability[concept], question["difficulty"])
                 score = min(1.0, max(0.0, rng.gauss(p_good, 0.2)))
                 rows.append([user_id, question["id"], concept, round(score, 2), now])
                 ability[concept] += 0.06  # practice helps a little

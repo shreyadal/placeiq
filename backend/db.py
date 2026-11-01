@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS session_questions (
     reference_answer TEXT NOT NULL,
     key_points       TEXT NOT NULL,
     source           TEXT NOT NULL,
+    -- what chose the concept: "dkt" (the model) or "heuristic" (average scores)
+    selection_source TEXT,
     asked_at         INTEGER NOT NULL
 );
 CREATE TABLE IF NOT EXISTS answers (
@@ -75,6 +77,10 @@ def connect():
 def init():
     with connect() as conn:
         conn.executescript(SCHEMA)
+        # databases made before selection_source existed get the column added
+        columns = {r["name"] for r in conn.execute("PRAGMA table_info(session_questions)")}
+        if "selection_source" not in columns:
+            conn.execute("ALTER TABLE session_questions ADD COLUMN selection_source TEXT")
 
 
 def to_dict(row):

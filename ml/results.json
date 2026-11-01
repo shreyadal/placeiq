@@ -6,7 +6,9 @@
     "valid_acc": 0.717,
     "best_epoch": 9,
     "max_epochs": 30,
-    "train_minutes": 0.8,
+    "epochs_run": 19,
+    "train_seconds": 21.0,
+    "train_minutes": 0.4,
     "config": {
       "dropout": 0.2,
       "emb_size": 200
@@ -25,7 +27,9 @@
     "valid_acc": 0.779,
     "best_epoch": 6,
     "max_epochs": 30,
-    "train_minutes": 7.9,
+    "epochs_run": 16,
+    "train_seconds": 259.2,
+    "train_minutes": 4.3,
     "config": {
       "dropout": 0.2,
       "emb_size": 200

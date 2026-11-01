@@ -17,7 +17,7 @@ from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from backend import db, selection
+from backend import db, model_api, selection
 from backend.grading import grade, grader_name
 
 log = logging.getLogger(__name__)
@@ -50,8 +50,6 @@ def warm_up():
     steps = [embedder, whisper]
     if grader_name() == "ollama":
         steps.append(ollama_model)
-    if selection.use_dkt():
-        steps.append(lambda: selection.mastery_for([]))
     for step in steps:
         try:
             step()
@@ -62,6 +60,9 @@ def warm_up():
 @asynccontextmanager
 async def lifespan(app):
     db.init()
+    # the DKT model is loaded before the first request; without a checkpoint the
+    # heuristic is used and /health says so
+    app.state.dkt_loaded = selection.load_dkt()
     # PLACEIQ_WARMUP=0 skips this (used by the tests)
     if os.environ.get("PLACEIQ_WARMUP", "1") != "0":
         threading.Thread(target=warm_up, daemon=True).start()
@@ -69,6 +70,7 @@ async def lifespan(app):
 
 
 app = FastAPI(title="PlaceIQ", lifespan=lifespan)
+app.include_router(model_api.router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.environ.get("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(","),
@@ -103,7 +105,7 @@ def public_question(row, number, total):
     return {
         "session_question_id": row["id"], "question_id": row["question_id"], "concept": row["concept"],
         "difficulty": row["difficulty"], "question": row["question"], "source": row["source"],
-        "number": number, "total": total,
+        "number": number, "total": total, "selection_source": row["selection_source"],
     }
 
 
@@ -120,15 +122,19 @@ def company_question(company, concept, difficulty, exclude):
         return None
 
 
-def mastery_source():
-    """What the mastery numbers come from: "dkt" (the trained model) or "scores" (the user's own averages)."""
-    return "dkt" if selection.use_dkt() else "scores"
+def question_generator():
+    """The model that writes company-style questions, or None if RAG is not installed."""
+    try:
+        from rag.generate import generator_name
+    except ImportError:
+        return None
+    return generator_name()
 
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "mastery_source": mastery_source(),
-            "grader": grader_name()}
+    return {"status": "ok", "use_dkt": selection.use_dkt(), "dkt_loaded": getattr(app.state, "dkt_loaded", False),
+            "grader": grader_name(), "question_generator": question_generator()}
 
 
 @app.get("/concepts")
@@ -199,7 +205,8 @@ def next_question(session_id: int):
         # asking again without answering returns the same question, so a page refresh
         # cannot be used to skip one
         if asked and asked[-1]["answer_id"] is None:
-            return {"done": False, "question": public_question(asked[-1], len(asked), total)}
+            return {"done": False, "question": public_question(asked[-1], len(asked), total),
+                    "source": asked[-1]["selection_source"]}
         if len(asked) >= total:
             return {"done": True, "question": None}
 
@@ -209,7 +216,8 @@ def next_question(session_id: int):
         asked_ids = {row["question_id"] for row in asked}
         seen_before = {row["question_id"] for row in conn.execute(
             "SELECT DISTINCT question_id FROM answers WHERE user_id = ?", (session["user_id"],))}
-        question, mastery = selection.next_question(history, session_history, asked_ids, seen_before)
+        question, mastery, selection_source, reason = selection.next_question(
+            history, session_history, asked_ids, seen_before)
         if question is None:
             return {"done": True, "question": None}
         source = "bank"
@@ -222,14 +230,18 @@ def next_question(session_id: int):
 
         cursor = conn.execute(
             "INSERT INTO session_questions (session_id, question_id, concept, difficulty, question, "
-            "reference_answer, key_points, source, asked_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "reference_answer, key_points, source, selection_source, asked_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (session_id, question["id"], question["concept"], question["difficulty"], question["question"],
-             question["reference_answer"], json.dumps(question["key_points"]), source, db.now_ms()))
+             question["reference_answer"], json.dumps(question["key_points"]), source, selection_source,
+             db.now_ms()))
         row = conn.execute("SELECT * FROM session_questions WHERE id = ?", (cursor.lastrowid,)).fetchone()
         return {
             "done": False,
             "question": public_question(row, len(asked) + 1, total),
-            # why this question was chosen
+            # why this question was chosen: "dkt" (the model) or "heuristic", and the
+            # mastery estimate the concept was drawn from
+            "source": selection_source,
+            "source_reason": reason,
             "mastery_before": mastery,
         }
 
@@ -271,14 +283,14 @@ def average(values):
 def summarise(conn, session):
     """Scores, delivery averages and updated mastery for one session."""
     answers = [db.to_dict(r) for r in conn.execute(
-        "SELECT a.*, sq.question, sq.difficulty FROM answers a JOIN session_questions sq "
+        "SELECT a.*, sq.question, sq.difficulty, sq.selection_source FROM answers a JOIN session_questions sq "
         "ON sq.id = a.session_question_id WHERE a.session_id = ? ORDER BY a.id", (session["id"],))]
     by_concept = {}
     for a in answers:
         by_concept.setdefault(a["concept"], []).append(a["score"])
     speech = [a["speech"] for a in answers if a["speech"]]
     vision = [a["vision"] for a in answers if a["vision"]]
-    mastery = selection.mastery_for(db.user_history(conn, session["user_id"]))
+    mastery, source, reason = selection.mastery_and_source(db.user_history(conn, session["user_id"]))
     return {
         "session_id": session["id"], "user_id": session["user_id"], "company": session["company"],
         "started_at": session["started_at"], "ended_at": session["ended_at"],
@@ -295,13 +307,13 @@ def summarise(conn, session):
             "head_movement": average([v.get("head_movement") for v in vision]),
             "blinks_per_minute": average([v.get("blinks_per_minute") for v in vision]),
         } if vision else None,
-        "mastery": mastery,
+        "mastery": mastery, "mastery_source": source, "mastery_source_reason": reason,
         "weak_concepts": sorted(mastery, key=mastery.get)[:3],
         "answers": [{
             "question": a["question"], "concept": a["concept"], "difficulty": a["difficulty"],
             "answer_text": a["answer_text"], "score": a["score"], "feedback": a["feedback"],
             "missing_points": a["missing_points"], "grader": a["grader"],
-            "speech": a["speech"], "vision": a["vision"],
+            "speech": a["speech"], "vision": a["vision"], "selection_source": a["selection_source"],
         } for a in answers],
     }
 
@@ -343,9 +355,11 @@ def user_progress(user_id: str):
             "answered": len(scores), "average_score": average(scores),
             "mastery": selection.mastery_for(history),
         })
-    current = selection.mastery_for(history)
+    current, source, reason = selection.mastery_and_source(history)
     return {
-        "user_id": user_id, "concepts": selection.concepts(), "sessions": points, "mastery_source": mastery_source(),
+        "user_id": user_id, "concepts": selection.concepts(), "sessions": points,
+        # what the next question's concept will be chosen from
+        "mastery_source": source, "mastery_source_reason": reason,
         "mastery": current, "weak_concepts": sorted(current, key=current.get)[:3] if history else [],
     }
 

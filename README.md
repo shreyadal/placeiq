@@ -1,33 +1,30 @@
 # PlaceIQ
 
-A mock technical interview app for college placements. The candidate answers out loud. The
-answer is transcribed (Whisper), graded against the question's key points, and measured
-for pace, filler words and pauses. Eye contact and head movement come from face tracking in
-the browser (MediaPipe). The next question targets the candidate's weakest concepts: DSA, OS,
-DBMS, CN, OOP and ML.
+A mock technical interview app for college placements. The candidate answers out loud (or
+types). The answer is transcribed (Whisper), graded against the question's key points, and
+measured for pace, filler words and pauses. Eye contact and head movement come from face
+tracking in the browser (MediaPipe). A trained knowledge tracing model (DKT) estimates the
+candidate's mastery of each concept (DSA, OS, DBMS, CN, OOP, ML), and the next question
+targets the weakest ones.
 
-The repo has two parts that are shown separately:
+- `backend/`: FastAPI. Sessions, question selection, grading, speech metrics, and the `/model` endpoints.
+- `frontend/`: Next.js. The interview, the results page and the `/model` page.
+- `ml/`: the DKT model (via [pykt](https://github.com/pykt-team/pykt-toolkit)): training, testing,
+  prediction. Metrics are in `ml/artifacts/metrics.json`; background in [ml/RESULTS.md](ml/RESULTS.md).
+- `data/`: the question bank and the prepared datasets (see [data/README.md](data/README.md)).
+- `tests/`: backend and model tests. `scripts/`: the demo seeder.
 
-- **The app**, `backend/` (FastAPI) and `frontend/` (Next.js), runs end to end on its own.
-- **The knowledge tracing model**, `ml/` (DKT via [pykt](https://github.com/pykt-team/pykt-toolkit)),
-  is trained and tested on its own. Results are in [ml/RESULTS.md](ml/RESULTS.md).
+## Prototype status
 
-Other folders: `data/` holds the question bank and the prepared datasets (see
-[data/README.md](data/README.md)), `rag/` holds company interview experiences used for
-company-style questions, `tests/` holds the backend tests and `scripts/` the demo seeder.
+This is a prototype for review. The DKT model is trained, tested and used by the app to pick
+questions, and the `/model` page shows its accuracy. It was trained on ASSISTments 2009 and on
+**simulated** interview data, has **not yet been validated on real students**, and is a
+**first, un-tuned run**. On the simulated candidates a plain average of each candidate's scores
+still finds their weakest concept more often than this DKT does (see the `/model` page).
 
-## How to run the app
+## How to run the backend
 
-Needs Python 3.11 and Node 20+. No GPU, Ollama or trained model is needed.
-
-For AI grading, put a [Gemini API key](https://aistudio.google.com/apikey) in a file named `.env`
-at the repo root (it is gitignored, so the key is never committed):
-
-```
-GEMINI_API_KEY=your-key
-```
-
-Without a key the app still works and grades by keywords.
+Needs Python 3.11. From the repo root:
 
 ```
 python -m venv venv
@@ -35,64 +32,102 @@ venv\Scripts\activate
 pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install -r backend/requirements.txt
 
-uvicorn backend.main:app --port 8000          # terminal 1, from the repo root
+uvicorn backend.main:app --port 8000
+```
 
-cd frontend                                   # terminal 2
+The backend loads the DKT checkpoint `ml/saved_model/interview/dkt/` at startup. Checkpoints are
+not committed, so train the model once first (next section). Without a checkpoint the app still
+runs and every question is chosen by the heuristic. `GET /health` shows `dkt_loaded`.
+
+Model endpoints:
+
+| endpoint | returns |
+|---|---|
+| `GET /model/metrics` | `ml/artifacts/metrics.json` as it is |
+| `POST /model/predict` | predicted mastery for the 6 concepts from `{"history": [{"concept", "score", "timestamp"}, ...]}` |
+| `GET /model/candidates` | ids of the 80 held-out simulated candidates |
+| `GET /model/check/{candidate_id}` | predicted mastery next to true ability for one held-out simulated candidate |
+
+## How to run the frontend
+
+Needs Node 20+. With the backend running:
+
+```
+cd frontend
 npm ci
 npm run build
 npm start                                     # http://localhost:3000
 ```
 
-Then, with both running:
+Pages: `/` starts an interview, `/results` shows mastery and past sessions, `/model` shows the
+model's accuracy and a check on simulated candidates. To fill the results page:
 
 ```
-python scripts/seed_demo.py --user demo --sessions 5    # fills the results page for user "demo"
-python -m pytest tests                                  # backend + RAG tests
+python scripts/seed_demo.py --user demo --sessions 5    # then open http://localhost:3000/results?user=demo
 ```
 
-The first spoken answer and the first company question are slower, because the Whisper and
-embedding models download on first use.
+## How questions are chosen
 
-Settings (environment variables for the backend, or lines in `.env`):
+With `PLACEIQ_USE_DKT=1` (the default), the next concept is drawn with weight (1 − mastery)², where
+mastery is DKT's predicted chance of a good answer from the candidate's whole history. The
+difficulty follows the mastery: easy below 40%, medium below 70%, hard above. The
+average-score heuristic (current session's scores) is used instead when the checkpoint is missing,
+when the candidate has fewer than 3 answers, or when `PLACEIQ_USE_DKT=0`. Every `/sessions/{id}/next`
+response says which one was used: `"source": "dkt"` or `"heuristic"`, with `source_reason`.
+The interview and results pages show the same label.
 
-| variable | default | meaning |
-|---|---|---|
-| `PLACEIQ_USE_DKT` | `0` | `0`: the next concept is chosen from the candidate's own average score per concept in the current session (weaker concept, more likely). `1`: chosen from the trained DKT model's predictions over the user's whole history |
-| `PLACEIQ_GRADER` | `gemini` if `GEMINI_API_KEY` is set, else `keyword` | `gemini`: Gemini checks each key point against the answer and writes feedback. `keyword`: the share of key points whose words appear. `ollama`: like gemini but with a local model (needs [Ollama](https://ollama.com) running with `OLLAMA_MODEL`, default `llama3.2`) |
-| `GEMINI_MODEL` | `gemini-3.5-flash` | Gemini model used for grading |
-| `WHISPER_MODEL` | `base.en` | faster-whisper model used for transcription |
+## How to retrain and test the model
 
-`GET /health` reports which mastery source and grader are active.
-
-## How to run the model
-
-From the repo root with the venv active. The full steps and numbers are in [ml/RESULTS.md](ml/RESULTS.md).
+From the repo root with the venv active (`pip install pykt-toolkit scipy` if not installed):
 
 ```
-pip install pykt-toolkit scipy
 set WANDB_MODE=disabled
 python -m ml.sequences assist2009             # prepared split -> pykt's windowed files
 python -m ml.sequences interview
-python -m ml.train --model dkt --dataset assist2009 --epochs 30 --fold 0
 python -m ml.train --model dkt --dataset interview  --epochs 30 --fold 0
+python -m ml.train --model dkt --dataset assist2009 --epochs 30 --fold 0
 python -m ml.test_model                       # predicted vs true weak concepts, held-out candidates
 ```
 
-On a laptop CPU the interview run takes about a minute and the ASSISTments run about 8 minutes.
+Fold 0 is validation, folds 1–4 are training, and the 20% of students in `test.csv` are held out.
+Training stops 10 epochs after the best validation AUC (max 30). Each command writes its
+numbers, and the command itself, to `ml/artifacts/metrics.json`; the logs are in `ml/logs/`. On a
+laptop CPU the interview run takes under a minute and the ASSISTments run about 5 minutes.
 
-## What is not connected yet
+## Tests
 
-- **The model is not wired into the app by default.** The app chooses questions from the
-  candidate's own average scores (`PLACEIQ_USE_DKT=0`). Setting `PLACEIQ_USE_DKT=1` makes the
-  backend use the DKT checkpoint in `ml/saved_model/interview/dkt/`, which must be trained first.
-  That path runs, but it has not been evaluated inside the app. On held-out simulated candidates
-  the plain score average currently finds weak concepts better than this first, un-tuned DKT
-  (see [ml/RESULTS.md](ml/RESULTS.md)).
-- **The model is trained on simulated candidates,** not on answers from real users of the app.
-  Answers stored by the app (`data/placeiq.db`) are not yet fed back into training.
-- **Gemini grading depends on Google's free tier.** When the model is busy (503) or slow,
-  each answer is retried up to 3 times, and if Gemini still fails that answer is graded by
-  keywords instead (shown as "Keyword match" in the app). Grading an answer takes about 5–10 s.
-  With Gemini on, candidates' answers are sent to Google.
-- **Face metrics were not tested with a real face** in this round: the automated browser test
-  used Chrome's fake camera, which shows a test pattern.
+```
+python -m pytest tests                        # backend, model endpoints, metrics consistency
+cd frontend && npx tsc --noEmit && npm run build
+```
+
+The model tests are skipped if no checkpoint has been trained. One test fails if
+`/model/metrics` differs from `metrics.json`, or if `metrics.json` does not match the checkpoints
+on disk.
+
+## Graders
+
+Set `PLACEIQ_GRADER` (environment variable or a line in `.env`):
+
+- `keyword` (default): the share of key points whose words appear in the answer. Needs nothing else.
+- `gemini`: Gemini checks each key point against the answer and writes short feedback. Needs
+  `GEMINI_API_KEY` in the environment or in `.env` at the repo root (gitignored; never commit a
+  key). If the key is missing or the call fails, the answer is graded by keywords and the
+  response says so (`fallback_from`, `fallback_reason`). With Gemini on, answers are sent to Google.
+- `ollama`: like gemini, with a local model served by [Ollama](https://ollama.com).
+
+Other settings: `GEMINI_MODEL` (default `gemini-3.5-flash`), `GEMINI_FALLBACK_MODEL` (default
+`gemini-3.5-flash-lite`, tried when the first is busy), `WHISPER_MODEL` (default `base.en`).
+
+## Not built yet
+
+- **Gemini grading in production use.** The provider exists and is optional, but keyword grading is
+  the default. Gemini's grades have not been checked against human grades.
+- **RAG for company-style questions.** A prototype is in `rag/` (choosing a company on the start
+  page uses it; with a Gemini key it writes the question). It is not evaluated and is not part of this review.
+- **A real database.** Sessions are stored in a local SQLite file (`data/placeiq.db`). There are no
+  accounts and no server database.
+- **Real data.** The model has not been trained or validated on answers from real students.
+  Answers stored by the app are not fed back into training.
+- **Deployment.** The app runs only locally.
+- **Face metrics with a real face.** The automated browser test used Chrome's fake camera.

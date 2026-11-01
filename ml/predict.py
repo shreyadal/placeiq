@@ -24,6 +24,10 @@ NO_HISTORY_P = 0.5
 @lru_cache(maxsize=1)
 def _load():
     """Load the DKT trained on interview data and the concept-name -> index mapping pykt made."""
+    # oneDNN's LSTM kernel fails with "could not create a primitive" in some processes on
+    # Windows (seen in a uvicorn started from a background shell); torch's own kernel is
+    # just as correct and, for a model this small, about as fast
+    torch.backends.mkldnn.enabled = False
     data_config = load_data_config()[DATASET]
     model = load_model("dkt", dict(MODEL_CONFIGS["dkt"]), data_config, EMB_TYPE, str(CKPT_DIR / DATASET / "dkt"))
     model.eval()

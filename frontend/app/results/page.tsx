@@ -148,11 +148,47 @@ export default function Results() {
         <div className="between baseline">
           <h2>Mastery by concept</h2>
           <span className="muted small">
-            {count === 1 ? "Session 1" : `Sessions 1–${count}`} · weakest first ·{" "}
-            {progress.mastery_source === "dkt" ? "predicted chance of a good answer" : "average score so far"}
+            {count === 1 ? "Session 1" : `Sessions 1–${count}`} · weakest first · estimate after each session
           </span>
         </div>
         <MasteryChart concepts={progress.concepts} sessions={progress.sessions} weakConcepts={progress.weak_concepts} />
+      </section>
+
+      <section className="section">
+        <div className="between baseline">
+          <h2>{progress.mastery_source === "dkt" ? "DKT mastery now" : "Mastery now"}</h2>
+          <span className="pills">
+            <span className={`pill compact${progress.mastery_source === "dkt" ? " accent" : ""}`}>
+              Next question chosen by: {progress.mastery_source === "dkt" ? "dkt" : "heuristic"}
+            </span>
+          </span>
+        </div>
+        <div className="panel check-panel">
+          <div className="pairs" role="list">
+            {[...progress.concepts]
+              .sort((a, b) => progress.mastery[a] - progress.mastery[b])
+              .map((c) => (
+                <div className="pair" role="listitem" key={c}>
+                  <span className="concept">
+                    {c}
+                    {progress.weak_concepts.includes(c) && <span className="pill warn compact">Weak</span>}
+                  </span>
+                  <div className="bar-row">
+                    <div className="track">
+                      <div className="fill predicted" style={{ width: `${progress.mastery[c] * 100}%` }} />
+                    </div>
+                    <span className="num">{Math.round(progress.mastery[c] * 100)}%</span>
+                  </div>
+                </div>
+              ))}
+          </div>
+          <p className="muted small">
+            {progress.mastery_source === "dkt"
+              ? "The DKT model's predicted chance of a good answer on each concept, from every answer so far. The next concept is drawn with weight (1 − mastery)²."
+              : `Average score per concept, because the model was not used: ${progress.mastery_source_reason}.`}{" "}
+            <Link href="/model">How accurate is the model?</Link>
+          </p>
+        </div>
       </section>
 
       {latest && (
@@ -236,6 +272,11 @@ export default function Results() {
                     <div className="head">
                       <span className="pill compact">{answer.concept}</span>
                       {answer.grader === "keyword" && <span className="pill compact">Keyword-graded</span>}
+                      {answer.selection_source && (
+                        <span className={`pill compact${answer.selection_source === "dkt" ? " accent" : ""}`}>
+                          Chosen by {answer.selection_source}
+                        </span>
+                      )}
                       <span>{answer.question}</span>
                     </div>
                     <p>{answer.feedback}</p>

@@ -10,9 +10,13 @@ export type Question = {
   difficulty: number;
   question: string;
   source: "bank" | "company";
+  // what chose the concept: the DKT model, or the average-score heuristic
+  selection_source: MasterySource | null;
   number: number;
   total: number;
 };
+
+export type MasterySource = "dkt" | "heuristic";
 
 export type SpeechMetrics = {
   word_count: number;
@@ -41,6 +45,9 @@ export type Grade = {
   feedback: string;
   missing_points: string[];
   grader: "gemini" | "ollama" | "keyword" | "none";
+  // set when the requested grader failed and the keyword grader was used instead
+  fallback_from?: string;
+  fallback_reason?: string;
   reference_answer: string;
 };
 
@@ -55,6 +62,7 @@ export type GradedAnswer = {
   grader: string;
   speech: SpeechMetrics | null;
   vision: VisionMetrics | null;
+  selection_source: MasterySource | null;
 };
 
 export type SessionSummary = {
@@ -76,6 +84,8 @@ export type SessionSummary = {
     blinks_per_minute: number | null;
   } | null;
   mastery: Record<string, number>;
+  mastery_source: MasterySource;
+  mastery_source_reason: string | null;
   weak_concepts: string[];
   answers: GradedAnswer[];
 };
@@ -95,8 +105,60 @@ export type Progress = {
   sessions: ProgressPoint[];
   mastery: Record<string, number>;
   weak_concepts: string[];
-  // "dkt": predicted by the knowledge tracing model; "scores": the user's own average scores
-  mastery_source: "dkt" | "scores";
+  // what the next question's concept is chosen from: "dkt", the knowledge tracing model's
+  // prediction, or "heuristic", the user's own average scores (reason says why)
+  mastery_source: MasterySource;
+  mastery_source_reason: string | null;
+};
+
+export type DatasetMetrics = {
+  dataset: string;
+  test_auc: number;
+  test_auc_no_repeat: number;
+  test_acc: number;
+  valid_auc: number;
+  best_epoch: number;
+  epochs_run: number;
+  max_epochs: number;
+  train_seconds: number;
+  train_students: number;
+  train_answers: number;
+  valid_students: number;
+  valid_answers: number;
+  test_students: number;
+  test_answers: number;
+  command: string;
+};
+
+export type WeakConceptScore = {
+  mean_spearman: number;
+  median_spearman: number;
+  weakest_in_top2: number;
+  weakest_in_top2_rate: number;
+};
+
+export type ModelMetrics = {
+  assist2009?: DatasetMetrics;
+  interview?: DatasetMetrics;
+  weak_concepts?: {
+    command: string;
+    candidates: number;
+    random_top2_rate: number;
+    dkt: WeakConceptScore;
+    score_average: WeakConceptScore;
+  };
+};
+
+export type CandidateCheck = {
+  candidate_id: string;
+  answers: number;
+  predicted_mastery: Record<string, number>;
+  true_ability: Record<string, number>;
+  true_p_good_medium: Record<string, number>;
+  spearman: number | null;
+  true_weakest: string;
+  predicted_weakest_2: string[];
+  true_weakest_in_predicted_2: boolean;
 };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -133,7 +195,9 @@ export const startSession = (user_id: string, company: string | null, num_questi
   post<{ session_id: number; num_questions: number }>("/sessions", { user_id, company, num_questions });
 
 export const nextQuestion = (sessionId: number) =>
-  request<{ done: boolean; question: Question | null }>(`/sessions/${sessionId}/next`);
+  request<{ done: boolean; question: Question | null; source?: MasterySource | null; source_reason?: string | null }>(
+    `/sessions/${sessionId}/next`,
+  );
 
 export const submitAnswer = (
   sessionId: number,
@@ -151,3 +215,10 @@ export function analyzeSpeech(audio: Blob) {
   form.append("audio", audio, "answer.webm");
   return request<{ transcript: string; metrics: SpeechMetrics }>("/speech/analyze", { method: "POST", body: form });
 }
+
+export const getModelMetrics = () => request<ModelMetrics>("/model/metrics");
+
+export const getModelCandidates = () => request<string[]>("/model/candidates");
+
+export const checkCandidate = (candidateId: string) =>
+  request<CandidateCheck>(`/model/check/${encodeURIComponent(candidateId)}`);

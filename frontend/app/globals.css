@@ -951,6 +951,117 @@ td.index {
   margin-top: 12px;
 }
 
+/* model page: predicted next to true, and the results page's model estimate */
+.check-panel {
+  gap: 20px;
+  padding: 24px;
+}
+
+.candidate-pick {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.candidate-pick .field {
+  width: 140px;
+  height: 40px;
+}
+
+/* .panel svg stretches charts to the panel width; the select's chevron keeps its size */
+.candidate-pick .select-wrap svg {
+  top: 13px;
+  width: 14px;
+  height: 14px;
+}
+
+/* five metric cards in one row on a laptop screen */
+.tiles.wide.five {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.legend {
+  display: flex;
+  gap: 20px;
+  color: var(--text-secondary);
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.swatch.predicted,
+.fill.predicted {
+  background: var(--accent);
+}
+
+.swatch.truth,
+.fill.truth {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.pairs {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  align-items: center;
+  gap: 16px;
+}
+
+.pair .concept {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-label);
+}
+
+.pair .bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 1fr 56px;
+  align-items: center;
+  gap: 12px;
+}
+
+.bar-row .track {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.bar-row .fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.bar-row .num {
+  font-size: 13px;
+  text-align: right;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
 @media (max-width: 640px) {
   .site-header {
     padding: 20px;

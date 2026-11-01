@@ -1,11 +1,10 @@
-Start preprocessing D:/placeiq/data/interview\train_valid_sequences.csv fold: _0...
-interaction_num: 2728
+D:\placeiq\venv\Lib\site-packages\sklearn\metrics\_ranking.py:469: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+Read data from processed file: D:/placeiq/data/interview\train_valid_sequences.csv_0.pkl
 file path: D:/placeiq/data/interview\train_valid_sequences.csv, qlen: 64, clen: 64, rlen: 64
-Start preprocessing D:/placeiq/data/interview\train_valid_sequences.csv fold: _1_2_3_4...
-interaction_num: 11498
+Read data from processed file: D:/placeiq/data/interview\train_valid_sequences.csv_1_2_3_4.pkl
 file path: D:/placeiq/data/interview\train_valid_sequences.csv, qlen: 256, clen: 256, rlen: 256
-Start preprocessing D:/placeiq/data/interview\test_sequences.csv fold: _-1...
-interaction_num: 3625
+Read data from processed file: D:/placeiq/data/interview\test_sequences.csv_-1.pkl
 file path: D:/placeiq/data/interview\test_sequences.csv, qlen: 80, clen: 80, rlen: 80
 ts.shape: (2664,), ps.shape: (2664,)
 Epoch: 1, validauc: 0.7, validacc: 0.6408, best epoch: 1, best auc: 0.7, train loss: 0.6803546429935835, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\interview\dkt
@@ -65,6 +64,7 @@ ts.shape: (2664,), ps.shape: (2664,)
 Epoch: 19, validauc: 0.7852, validacc: 0.717, best epoch: 9, best auc: 0.7852, train loss: 0.4532297811171281, emb_type: qid, model: dkt, save_dir: D:\placeiq\ml\saved_model\interview\dkt
             testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
 ts.shape: (3545,), ps.shape: (3545,)
+wrote D:\placeiq\ml\artifacts\metrics.json
 {
   "dataset": "interview",
   "model": "dkt",
@@ -72,7 +72,9 @@ ts.shape: (3545,), ps.shape: (3545,)
   "valid_acc": 0.717,
   "best_epoch": 9,
   "max_epochs": 30,
-  "train_minutes": 0.8,
+  "epochs_run": 19,
+  "train_seconds": 21.0,
+  "train_minutes": 0.4,
   "config": {
     "dropout": 0.2,
     "emb_size": 200

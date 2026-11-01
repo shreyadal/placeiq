@@ -2,10 +2,15 @@
 
     python -m rag.generate Amazon OS
 
-Retrieval finds experiences from that company about the concept; a local model served by
-Ollama then writes one new question in the same style, with a reference answer and key
-points so it can be graded like a question from the bank. If Ollama is not running,
-generate_question returns None and the caller uses the question bank.
+Retrieval finds experiences from that company about the concept; a language model then
+writes one new question in the same style, with a reference answer and key points so it can
+be graded like a question from the bank.
+
+PLACEIQ_GENERATOR picks the model:
+  gemini   Google's Gemini API; needs GEMINI_API_KEY. The default whenever that key is set.
+  ollama   a local model served by Ollama. The default when no Gemini key is set.
+If the model cannot be reached, generate_question returns None and the caller uses the
+question bank.
 """
 import logging
 import os
@@ -15,6 +20,8 @@ import uuid
 import httpx
 import ollama
 from pydantic import BaseModel, ValidationError
+
+from backend import gemini
 
 from rag.store import CONCEPT_DESCRIPTIONS, retrieve
 
@@ -42,9 +49,31 @@ class GeneratedQuestion(BaseModel):
     key_points: list[str]
 
 
+def generator_name():
+    """The model in use: PLACEIQ_GENERATOR if set, else "gemini" when a Gemini key is present, else "ollama"."""
+    default = "gemini" if gemini.has_key() else "ollama"
+    return os.environ.get("PLACEIQ_GENERATOR", default)
+
+
+def _generate_with_gemini(prompt):
+    return gemini.generate_json(SYSTEM_PROMPT, prompt, GeneratedQuestion)
+
+
+def _generate_with_ollama(prompt):
+    response = ollama.Client(timeout=TIMEOUT_SECONDS).chat(
+        model=MODEL,
+        messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": prompt}],
+        # the JSON schema constrains the output, so it always parses into a GeneratedQuestion
+        format=GeneratedQuestion.model_json_schema(),
+        # keep the model loaded between questions; the default unloads it after 5 minutes
+        keep_alive="30m",
+    )
+    return GeneratedQuestion.model_validate_json(response.message.content)
+
+
 def generate_question(company, concept, difficulty, exclude=()):
     """Returns a question dict shaped like the entries of data/questions.json, or None if
-    there is nothing to ground it in or Ollama is unavailable.
+    there is nothing to ground it in or the model is unavailable.
 
     exclude: questions already asked in this session, so they are not repeated.
     """
@@ -62,26 +91,26 @@ def generate_question(company, concept, difficulty, exclude=()):
         f"Questions already asked in this session, which the new one should differ from:\n{already}"
     )
 
-    try:
-        response = ollama.Client(timeout=TIMEOUT_SECONDS).chat(
-            model=MODEL,
-            messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": prompt}],
-            # the JSON schema constrains the output, so it always parses into a GeneratedQuestion
-            format=GeneratedQuestion.model_json_schema(),
-            # keep the model loaded between questions; the default unloads it after 5 minutes
-            keep_alive="30m",
-        )
-        generated = GeneratedQuestion.model_validate_json(response.message.content)
-    except ollama.ResponseError as e:
-        # a 404 here means the model has not been pulled: ollama pull <model>
-        log.warning("question generation failed with status %s: %s", e.status_code, e.error)
-        return None
-    except (ConnectionError, httpx.TransportError) as e:
-        log.warning("could not reach Ollama for question generation: %s", e)
-        return None
-    except ValidationError as e:
-        log.warning("question generation returned output that could not be parsed: %s", e)
-        return None
+    if generator_name() == "gemini":
+        try:
+            generated = _generate_with_gemini(prompt)
+        except Exception as e:
+            # no key, a bad key, no network, quota, a blocked or unparseable reply
+            log.warning("Gemini question generation failed: %s: %s", type(e).__name__, e)
+            return None
+    else:
+        try:
+            generated = _generate_with_ollama(prompt)
+        except ollama.ResponseError as e:
+            # a 404 here means the model has not been pulled: ollama pull <model>
+            log.warning("question generation failed with status %s: %s", e.status_code, e.error)
+            return None
+        except (ConnectionError, httpx.TransportError) as e:
+            log.warning("could not reach Ollama for question generation: %s", e)
+            return None
+        except ValidationError as e:
+            log.warning("question generation returned output that could not be parsed: %s", e)
+            return None
 
     if not generated.question.strip() or not generated.reference_answer.strip() or not generated.key_points:
         log.warning("question generation returned an incomplete question")
